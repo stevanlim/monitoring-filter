@@ -172,6 +172,7 @@
             </button>
         </div>
     </div>
+</div>
 
     <!-- Filter Controls -->
     <div class="rounded-2xl border border-slate-800/60 bg-[#0d1424] p-4">
