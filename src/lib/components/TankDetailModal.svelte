@@ -135,25 +135,29 @@
 
 {#if isOpen}
     <div
-        class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-fadeIn"
+        class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-fadeIn"
     >
         <div
-            class="bg-[#0d1424] border border-slate-700/60 rounded-3xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl relative overflow-hidden text-left"
+            class="bg-[#0d1424] border border-slate-700/60 rounded-2xl sm:rounded-3xl w-full max-w-3xl max-h-[96vh] sm:max-h-[92vh] flex flex-col shadow-2xl relative overflow-hidden text-left"
         >
             <!-- Header Modal -->
             <div
-                class="p-5 sm:p-6 border-b border-slate-800/80 bg-slate-900/50 flex flex-wrap justify-between items-center gap-4 shrink-0"
+                class="p-3.5 sm:p-6 border-b border-slate-800/80 bg-slate-900/50 flex flex-wrap justify-between items-center gap-2 sm:gap-4 shrink-0"
             >
                 <div class="min-w-0 flex-1">
                     <div
-                        class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 mb-1"
+                        class="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 mb-0.5 sm:mb-1 truncate"
                     >
                         <span>🏢 {detail?.group || "Group"}</span>
                         <span>•</span>
                         <span>🗺️ {detail?.region || "Umum"}</span>
+                        {#if detail?.location_type}
+                            <span>•</span>
+                            <span class="text-sky-400 font-semibold">📍 {detail.location_type}</span>
+                        {/if}
                     </div>
                     <h2
-                        class="text-xl sm:text-2xl font-black text-white truncate flex items-center gap-2.5"
+                        class="text-base sm:text-2xl font-black text-white truncate flex items-center gap-2 sm:gap-2.5"
                     >
                         <span>🛢️</span>
                         {detail?.estate || "Detail Unit Tangki"}
@@ -200,7 +204,7 @@
 
             <!-- Tabs Navigation -->
             <div
-                class="px-6 border-b border-slate-800 flex items-center gap-2 bg-slate-950/40 text-xs font-semibold shrink-0"
+                class="px-3 sm:px-6 border-b border-slate-800 flex items-center gap-1.5 sm:gap-2 bg-slate-950/40 text-xs font-semibold shrink-0 overflow-x-auto"
             >
                 <button
                     onclick={() => (activeTab = "timeline")}
@@ -393,8 +397,7 @@
                                                         <div
                                                             class="text-[10px] text-slate-500 mt-0.5"
                                                         >
-                                                            Interval: {item.interval_months}
-                                                            Bulan
+                                                            Interval: {item.interval_months || 90} Hari
                                                         </div>
                                                     </div>
                                                 </div>
@@ -595,10 +598,20 @@
                                             class="flex justify-between border-b border-slate-800/60 pb-1.5"
                                         >
                                             <span class="text-slate-500"
-                                                >Kebun / Estate:</span
+                                                >Nama PT / Estate:</span
                                             >
                                             <span class="font-bold text-white"
                                                 >{detail.estate}</span
+                                            >
+                                        </div>
+                                        <div
+                                            class="flex justify-between border-b border-slate-800/60 pb-1.5"
+                                        >
+                                            <span class="text-slate-500"
+                                                >Tipe Lokasi:</span
+                                            >
+                                            <span class="font-bold text-sky-400"
+                                                >{detail.location_type || "Kebun"}</span
                                             >
                                         </div>
                                         <div
@@ -676,7 +689,7 @@
                                                 >Interval Maintenance:</span
                                             >
                                             <span class="font-bold text-white"
-                                                >{detail.interval_months || 3} Bulan</span
+                                                >{detail.interval_months || 90} Hari</span
                                             >
                                         </div>
                                         <div class="flex justify-between">

@@ -50,19 +50,21 @@ export async function POST({ request }) {
             return json({ error: 'tank_id dan file foto wajib ada' }, { status: 400 });
         }
 
-        // Ambil info tangki untuk path folder
-        const tanks = await query('SELECT group_name, region, estate FROM tanks WHERE id = ?', [tankId]);
+        // Ambil info tangki untuk path folder (termasuk location_type)
+        const tanks = await query('SELECT group_name, region, estate, location_type FROM tanks WHERE id = ?', [tankId]);
         if (!tanks.length) {
             return json({ error: 'Tangki tidak ditemukan' }, { status: 404 });
         }
 
         const tank = tanks[0];
-        const groupSafe  = sanitizeFolderName(tank.group_name);
-        const regionSafe = sanitizeFolderName(tank.region || 'Umum');
-        const estateSafe = sanitizeFolderName(tank.estate);
+        const groupSafe    = sanitizeFolderName(tank.group_name);
+        const regionSafe   = sanitizeFolderName(tank.region || 'Umum');
+        const estateSafe   = sanitizeFolderName(tank.estate);
+        // Gunakan location_type sebagai subfolder (misal: Kebun, Pabrik, Workshop, dll.)
+        const locTypeSafe  = sanitizeFolderName(tank.location_type || 'Kebun');
 
-        // Buat direktori jika belum ada
-        const folderPath = join(UPLOAD_BASE, groupSafe, regionSafe, estateSafe);
+        // Buat direktori jika belum ada: Group/Region/Estate/LocType/
+        const folderPath = join(UPLOAD_BASE, groupSafe, regionSafe, estateSafe, locTypeSafe);
         if (!existsSync(folderPath)) {
             await mkdir(folderPath, { recursive: true });
         }
@@ -77,8 +79,8 @@ export async function POST({ request }) {
         const buffer = Buffer.from(await file.arrayBuffer());
         await writeFile(fullPath, buffer);
 
-        // Relative path untuk DB (tanpa 'static/')
-        const relPath = `${groupSafe}/${regionSafe}/${estateSafe}/${filename}`;
+        // Relative path untuk DB (tanpa 'static/'): Group/Region/Estate/LocType/file
+        const relPath = `${groupSafe}/${regionSafe}/${estateSafe}/${locTypeSafe}/${filename}`;
 
         // Insert ke tabel photos
         const photoId = await insert('photos', {

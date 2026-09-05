@@ -13,5 +13,9 @@ export default defineConfig({
 			},
 			adapter: adapter()
 		})
-	]
+	],
+	server: {
+		host: true,
+		allowedHosts: true
+	}
 });

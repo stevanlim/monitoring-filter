@@ -48,82 +48,21 @@
     <!-- KPI Cards -->
     <KPIHeader />
 
-    <!-- Stock Alerts Banner (if any item depleted or low) -->
-    {#if $stockAlertStore.habis > 0 || $stockAlertStore.menipis > 0}
-        <div class="space-y-3">
-            {#if $stockAlertStore.habis > 0}
-                <div class="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 animate-fadeIn">
-                    <div class="flex items-start gap-3.5">
-                        <div class="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-xl shrink-0">
-                            🚨
-                        </div>
-                        <div>
-                            <div class="text-sm font-bold text-rose-200 flex items-center gap-2">
-                                <span>Peringatan Kritis: {$stockAlertStore.habis} Tipe Filter Habis (0 Pcs)</span>
-                            </div>
-                            <p class="text-xs text-rose-300/80 mt-0.5 leading-relaxed">
-                                Filter berikut tidak tersedia: 
-                                <b class="text-rose-100">
-                                    {$stockAlertStore.items_habis.map(i => i.filter_name).join(', ')}
-                                </b>. 
-                                Servis atau pemasangan baru menggunakan tipe ini akan diblokir sampai stok diisi.
-                            </p>
-                        </div>
-                    </div>
 
-                    <a
-                        href="/stock"
-                        class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition-all shrink-0"
-                    >
-                        Isi Stok Filter &rarr;
-                    </a>
-                </div>
-            {/if}
-
-            {#if $stockAlertStore.menipis > 0}
-                <div class="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 animate-fadeIn">
-                    <div class="flex items-start gap-3.5">
-                        <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-xl shrink-0">
-                            ⚠️
-                        </div>
-                        <div>
-                            <div class="text-sm font-bold text-amber-200">
-                                Perhatian: {$stockAlertStore.menipis} Tipe Filter Mendekati Batas Minimum
-                            </div>
-                            <p class="text-xs text-amber-300/80 mt-0.5 leading-relaxed">
-                                Filter menipis: 
-                                <b class="text-amber-100">
-                                    {$stockAlertStore.items_menipis.map(i => `${i.filter_name} (${i.quantity} pcs)`).join(', ')}
-                                </b>. 
-                                Disarankan segera melakukan pemesanan (PO) spare part.
-                            </p>
-                        </div>
-                    </div>
-
-                    <a
-                        href="/stock"
-                        class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow-md shadow-amber-600/20 transition-all shrink-0"
-                    >
-                        Lihat Stok &rarr;
-                    </a>
-                </div>
-            {/if}
-        </div>
-    {/if}
 
     <!-- Section header -->
-    <div class="flex flex-wrap justify-between items-center gap-4">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
-            <h2 class="text-xl font-bold text-white flex items-center gap-2.5">
-                <span class="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/25 flex items-center justify-center text-base">🔔</span>
+            <h2 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2 sm:gap-2.5">
+                <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-500/15 border border-amber-500/25 flex items-center justify-center text-sm sm:text-base shrink-0">🔔</span>
                 Notice Harian Pergantian Filter
             </h2>
-            <p class="text-[13px] text-slate-500 mt-1.5 ml-[42px]">
+            <p class="text-[12px] sm:text-[13px] text-slate-500 mt-1 sm:mt-1.5 sm:ml-[42px]">
                 Konsumen yang filter-nya mendekati atau sudah melewati tanggal jatuh tempo maintenance.
             </p>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 shrink-0">
             {#if sortedNotice.length > 0}
                 <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold">
                     <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
@@ -177,7 +116,13 @@
                                 onclick={() => openDetailModal(rec.id)}
                                 class="min-w-0 flex-1 text-left group/title"
                             >
-                                <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">{rec.group}</div>
+                                <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5 flex items-center gap-1.5">
+                                    <span>{rec.group}</span>
+                                    {#if rec.location_type}
+                                        <span>•</span>
+                                        <span class="text-sky-400 font-semibold">{rec.location_type}</span>
+                                    {/if}
+                                </div>
                                 <h3 class="text-[15px] font-bold text-white group-hover/title:text-sky-400 leading-snug truncate flex items-center gap-1.5">
                                     <span>{rec.estate}</span>
                                     <span class="text-[10px] text-sky-400 opacity-0 group-hover/title:opacity-100">🔍</span>
@@ -235,11 +180,11 @@
                         </div>
 
                         <!-- Action buttons -->
-                        <div class="flex gap-2 pt-1">
+                        <div class="flex flex-wrap sm:flex-nowrap gap-2 pt-1">
                             <!-- Detail button -->
                             <button
                                 onclick={() => openDetailModal(rec.id)}
-                                class="px-3 py-2.5 rounded-xl bg-indigo-600/50 hover:bg-indigo-600 border border-indigo-500/30 text-indigo-200 hover:text-white text-[12px] font-bold text-center transition-all flex items-center justify-center gap-1 shrink-0"
+                                class="flex-1 sm:flex-none px-3 py-2.5 rounded-xl bg-indigo-600/50 hover:bg-indigo-600 border border-indigo-500/30 text-indigo-200 hover:text-white text-[12px] font-bold text-center transition-all flex items-center justify-center gap-1 shrink-0 cursor-pointer"
                                 title="Lihat riwayat lengkap & foto"
                             >
                                 🔍 Detail
@@ -250,7 +195,7 @@
                                     href={buildWhatsAppUrl(rec)}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    class="flex-1 py-2.5 px-3 rounded-xl bg-emerald-600/90 hover:bg-emerald-500 border border-emerald-500/40 text-white text-[12px] font-bold text-center transition-all flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20 active:scale-95"
+                                    class="flex-1 py-2.5 px-3 rounded-xl bg-emerald-600/90 hover:bg-emerald-500 border border-emerald-500/40 text-white text-[12px] font-bold text-center transition-all flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer"
                                     title="Kirim pesan WhatsApp ke {picInfo.name} ({picInfo.phone})"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
@@ -263,7 +208,7 @@
                                     href={buildWhatsAppUrl(rec)}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    class="flex-1 py-2.5 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-[12px] font-bold text-center transition-all flex items-center justify-center gap-1.5"
+                                    class="flex-1 py-2.5 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-[12px] font-bold text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                                     title="Kirim pesan WhatsApp default"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="currentColor">
@@ -275,13 +220,13 @@
 
                             <button
                                 onclick={() => openServiceModal(rec)}
-                                class="flex-1 py-2.5 rounded-xl bg-sky-600/70 hover:bg-sky-600 border border-sky-500/30 text-white text-[12px] font-bold text-center transition-all flex items-center justify-center gap-1.5"
+                                class="w-full sm:w-auto sm:flex-1 py-2.5 px-3 rounded-xl bg-sky-600/70 hover:bg-sky-600 border border-sky-500/30 text-white text-[12px] font-bold text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                 </svg>
-                                Ganti Filter
+                                <span>Ganti Filter</span>
                             </button>
                         </div>
 

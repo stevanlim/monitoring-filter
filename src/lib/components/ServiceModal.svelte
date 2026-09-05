@@ -13,7 +13,7 @@
     }
 
     let serviceDate    = $state(getTodayString());
-    let intervalMonths = $state(3);
+    let intervalDays   = $state(90);
     let selectedFilterId = $state('');
     let notes          = $state('');
     let photoFile      = $state(null);   // File object (bukan base64)
@@ -22,13 +22,9 @@
     let isSaving       = $state(false);
     let saveError      = $state('');
 
-    // Selected filter stock item
+    // Selected filter item dari daftar tipe filter
     let selectedStockItem = $derived(
         $filterStockStore.find(i => String(i.id) === String(selectedFilterId)) || null
-    );
-    let isStockDepleted = $derived(selectedStockItem ? selectedStockItem.quantity <= 0 : false);
-    let isStockLow = $derived(
-        selectedStockItem ? selectedStockItem.quantity > 0 && selectedStockItem.quantity <= selectedStockItem.min_quantity : false
     );
 
     let lastOpenRecordId = null;
@@ -36,7 +32,7 @@
         if (isOpen && record && (lastOpenRecordId !== record.id)) {
             lastOpenRecordId = record.id;
             serviceDate    = getTodayString();
-            intervalMonths = record.interval_months || 3;
+            intervalDays   = record.interval_days || record.interval_months || 90;
             notes          = '';
             photoFile      = null;
             photoPreview   = null;
@@ -72,24 +68,14 @@
         e.preventDefault();
         if (!record || isSaving) return;
 
-        if (isStockDepleted) {
-            saveError = `Stok untuk filter "${selectedStockItem?.filter_name}" sudah habis (0 pcs). Anda tidak dapat melakukan servis sampai stok ditambahkan di menu Kelola Data Filter.`;
-            return;
-        }
-
         isSaving  = true;
         saveError = '';
 
         try {
-            // 1. Kurangi stok filter jika ada yang dipilih
-            if (selectedStockItem && selectedStockItem.id) {
-                await filterStockStore.adjustQuantity(selectedStockItem.id, -1);
-            }
-
-            // 2. Tipe filter baru yang digunakan
+            // 1. Tipe filter baru yang dipilih
             const newEquipment = selectedStockItem ? selectedStockItem.filter_name : null;
 
-            // 3. Catatan servis
+            // 2. Catatan servis
             const notesWithFilter = selectedStockItem 
                 ? (notes ? `[Filter: ${selectedStockItem.filter_name}] ${notes}` : `Pergantian filter element ${selectedStockItem.filter_name}`)
                 : notes;
@@ -97,7 +83,7 @@
             await recordsStore.recordService(
                 record.id,
                 serviceDate,
-                parseInt(intervalMonths),
+                parseInt(intervalDays) || 90,
                 notesWithFilter,
                 photoFile,
                 newEquipment
@@ -118,21 +104,21 @@
 </script>
 
 {#if isOpen && record}
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md animate-fadeIn">
-        <div class="bg-[#0d1424] border border-slate-700/60 rounded-3xl w-full max-w-4xl max-h-[94vh] flex flex-col shadow-2xl relative overflow-hidden text-left">
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-5 bg-black/85 backdrop-blur-md animate-fadeIn">
+        <div class="bg-[#0d1424] border border-slate-700/60 rounded-2xl sm:rounded-3xl w-full max-w-4xl max-h-[96vh] sm:max-h-[94vh] flex flex-col shadow-2xl relative overflow-hidden text-left">
 
             <!-- Header -->
-            <div class="p-4 sm:p-5 border-b border-slate-800/80 bg-slate-900/50 flex justify-between items-center shrink-0">
-                <div class="flex items-center gap-3">
-                    <span class="w-9 h-9 rounded-xl bg-sky-500/15 border border-sky-500/25 flex items-center justify-center text-lg shrink-0">🛠️</span>
+            <div class="p-3.5 sm:p-5 border-b border-slate-800/80 bg-slate-900/50 flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-2.5 sm:gap-3">
+                    <span class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-sky-500/15 border border-sky-500/25 flex items-center justify-center text-base sm:text-lg shrink-0">🛠️</span>
                     <div>
-                        <h3 class="text-base font-bold text-white leading-snug">Catat Maintenance & Upload Foto</h3>
-                        <p class="text-[11px] text-slate-400">Dokumentasi pergantian element filter & pembaruan siklus jatuh tempo</p>
+                        <h3 class="text-sm sm:text-base font-bold text-white leading-snug">Catat Maintenance & Upload Foto</h3>
+                        <p class="text-[10px] sm:text-[11px] text-slate-400">Dokumentasi pergantian element filter & pembaruan siklus jatuh tempo</p>
                     </div>
                 </div>
                 <button 
                     onclick={onClose} 
-                    class="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors text-base"
+                    class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors text-sm sm:text-base cursor-pointer"
                 >
                     ✕
                 </button>
@@ -140,7 +126,7 @@
 
             <!-- Form Body (Landscape 2-Columns) -->
             <form onsubmit={handleSubmit} class="flex flex-col flex-1 overflow-hidden">
-                <div class="p-4 sm:p-6 overflow-y-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-5">
+                <div class="p-3.5 sm:p-6 overflow-y-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
 
                     <!-- LEFT COLUMN (Form Fields 7/12) -->
                     <div class="lg:col-span-7 space-y-3.5">
@@ -153,52 +139,40 @@
                                     {record.equipment}
                                 </span>
                             </div>
-                            <div class="text-sm font-bold text-white leading-tight">{record.estate}</div>
+                            <div class="text-sm font-bold text-white leading-tight flex items-center gap-2">
+                                <span>{record.estate}</span>
+                                {#if record.location_type}
+                                    <span class="text-[10px] px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-sky-300 font-medium">{record.location_type}</span>
+                                {/if}
+                            </div>
                             <div class="text-[11px] text-slate-400">
                                 Wilayah: <span class="text-slate-200">{record.region || 'Umum'}</span> | Unit: <span class="text-slate-200">{record.unit_name || record.tank_capacity || 'Tangki Solar'}</span>
                             </div>
                         </div>
 
                         <!-- Filter Sparepart Type Selection & Stock Status -->
+                        <!-- Filter Sparepart Type Selection -->
                         <div>
-                            <label for="filter-stock-select" class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1 flex justify-between items-center">
-                                <span>Tipe Filter / Spare Part Digunakan *</span>
-                                {#if selectedStockItem}
-                                    <span class="text-[11px] font-mono font-bold {isStockDepleted ? 'text-rose-400' : isStockLow ? 'text-amber-400' : 'text-emerald-400'}">
-                                        Stok: {selectedStockItem.quantity} pcs {isStockDepleted ? '(HABIS ❌)' : ''}
-                                    </span>
-                                {/if}
+                            <label for="filter-stock-select" class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">
+                                Tipe Filter / Spare Part Digunakan *
                             </label>
 
                             <select
                                 id="filter-stock-select"
                                 bind:value={selectedFilterId}
-                                class="w-full bg-slate-950 border {isStockDepleted ? 'border-rose-500/60 text-rose-300' : 'border-slate-800 text-white'} rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-sky-500 font-medium"
+                                class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-sky-500 font-medium"
                             >
                                 {#if $filterStockStore.length === 0}
                                     <option value="">(Belum ada data tipe filter di sistem)</option>
                                 {:else}
                                     {#each $filterStockStore as item}
                                         <option value={String(item.id)}>
-                                            {item.filter_name} — (Sisa: {item.quantity} pcs {item.quantity === 0 ? '❌ HABIS' : item.quantity <= item.min_quantity ? '⚠️ MENIPIS' : '✅'})
+                                            {item.filter_name}
                                         </option>
                                     {/each}
                                 {/if}
                             </select>
                         </div>
-
-                        <!-- Warning Stock Box -->
-                        {#if isStockDepleted}
-                            <div class="p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
-                                <span class="text-sm">🚫</span>
-                                <span class="text-[11px]"><b>Stok filter habis (0 pcs).</b> Servis tidak dapat dicatat sebelum stok ditambahkan di menu Kelola Data Filter.</span>
-                            </div>
-                        {:else if isStockLow}
-                            <div class="p-2 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-[11px] flex items-center gap-2">
-                                <span>⚠️</span>
-                                <span>Peringatan: Stok filter ini tersisa <b>{selectedStockItem?.quantity} pcs</b>.</span>
-                            </div>
-                        {/if}
 
                         <!-- Date & Interval (Side-by-Side) -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -216,18 +190,23 @@
                             </div>
 
                             <div>
-                                <label for="interval-months" class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">
-                                    Interval Servis Berikutnya *
+                                <label for="interval-input" class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">
+                                    Interval Maintenance (Hari) *
                                 </label>
-                                <select
-                                    id="interval-months"
-                                    bind:value={intervalMonths}
-                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500 font-medium"
-                                >
-                                    <option value={3}>3 Bulan (90 Hari)</option>
-                                    <option value={4}>4 Bulan (120 Hari)</option>
-                                    <option value={6}>6 Bulan (180 Hari)</option>
-                                </select>
+                                <div class="relative">
+                                    <input
+                                        type="number"
+                                        id="interval-input"
+                                        bind:value={intervalDays}
+                                        min="1"
+                                        max="365"
+                                        required
+                                        placeholder="Contoh: 90"
+                                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500 font-medium pr-14"
+                                    />
+                                    <span class="absolute right-3 top-2 text-xs text-slate-500 pointer-events-none font-semibold">Hari</span>
+                                </div>
+                                <span class="text-[10px] text-slate-500 mt-1 block">Ketik jumlah hari interval maintenance rutin (misal: 30, 60, 90 hari)</span>
                             </div>
                         </div>
 
@@ -338,17 +317,14 @@
                         </button>
                         <button
                             type="submit"
-                            disabled={isSaving || isStockDepleted}
-                            class="px-5 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-400 hover:to-cyan-400 text-white text-xs font-bold shadow-lg shadow-sky-500/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 transition-all active:scale-95"
-                            title={isStockDepleted ? 'Stok filter habis, tidak dapat menyimpan' : ''}
+                            disabled={isSaving}
+                            class="px-5 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-400 hover:to-cyan-400 text-white text-xs font-bold shadow-lg shadow-sky-500/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 transition-all active:scale-95 cursor-pointer"
                         >
                             {#if isSaving}
                                 <span class="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                                 <span>Menyimpan Servis...</span>
-                            {:else if isStockDepleted}
-                                <span>🚫 Stok Habis</span>
                             {:else}
-                                <span>💾 Simpan Servis & Potong Stok (-1)</span>
+                                <span>💾 Simpan Perubahan & Servis</span>
                             {/if}
                         </button>
                     </div>

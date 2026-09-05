@@ -43,8 +43,8 @@ export function toggleMute() {
 }
 
 /**
- * 🚨 URGENT — Nada alarm untuk jatuh tempo / overdue
- * Dua nada tinggi berulang (meningkatkan urgensi)
+ * 🚨 URGENT ALARM — Sirine darurat untuk JATUH TEMPO
+ * Pola: 3x burst sirine (nada tinggi-rendah cepat) untuk maksimum urgensi
  */
 export function playUrgentSound() {
     if (isMuted) return;
@@ -52,13 +52,23 @@ export function playUrgentSound() {
         const ctx = getAudioContext();
         const now = ctx.currentTime;
 
-        // Nada 1: C6 (1047 Hz)
-        playTone(ctx, 1047, now, 0.15, 0.25, 'sine');
-        // Jeda pendek
-        playTone(ctx, 1319, now + 0.2, 0.15, 0.25, 'sine');
-        // Nada 3: C6 lagi (pengulangan = urgensi)
-        playTone(ctx, 1047, now + 0.4, 0.15, 0.2, 'sine');
-        playTone(ctx, 1319, now + 0.6, 0.15, 0.2, 'sine');
+        // === BURST 1 ===
+        playTone(ctx, 1200, now + 0.00, 0.10, 0.40, 'sawtooth'); // HIGH
+        playTone(ctx, 700,  now + 0.12, 0.10, 0.40, 'sawtooth'); // LOW
+        playTone(ctx, 1200, now + 0.24, 0.10, 0.40, 'sawtooth'); // HIGH
+        playTone(ctx, 700,  now + 0.36, 0.10, 0.40, 'sawtooth'); // LOW
+
+        // === BURST 2 (setelah jeda 0.15s) ===
+        playTone(ctx, 1400, now + 0.65, 0.10, 0.40, 'sawtooth'); // HIGH+
+        playTone(ctx, 800,  now + 0.77, 0.10, 0.40, 'sawtooth'); // LOW
+        playTone(ctx, 1400, now + 0.89, 0.10, 0.40, 'sawtooth'); // HIGH+
+        playTone(ctx, 800,  now + 1.01, 0.10, 0.40, 'sawtooth'); // LOW
+
+        // === BURST 3 — crescendo akhir ===
+        playTone(ctx, 1600, now + 1.30, 0.08, 0.45, 'square'); // HIGH max
+        playTone(ctx, 900,  now + 1.40, 0.08, 0.45, 'square');
+        playTone(ctx, 1600, now + 1.50, 0.08, 0.45, 'square');
+        playTone(ctx, 900,  now + 1.60, 0.15, 0.45, 'square');
     } catch (e) {
         console.warn('[notifAudio] urgent sound error:', e);
     }

@@ -5,7 +5,7 @@
  */
 import { json } from '@sveltejs/kit';
 import { query, insert } from '$lib/server/db.js';
-import { transformTank, formatLocalDate, addMonthsToDate } from '$lib/server/statusHelper.js';
+import { transformTank, formatLocalDate, calculateNextMaintenanceDate } from '$lib/server/statusHelper.js';
 import { getValidPhotos } from '$lib/server/photoHelper.js';
 
 export async function GET({ params }) {
@@ -63,7 +63,7 @@ export async function GET({ params }) {
                 title: isInitial ? 'Pemasangan Awal Unit Filter' : `Pergantian Filter (Servis #${idx})`,
                 is_initial: isInitial,
                 service_date: dateStr,
-                interval_months: h.interval_months || 3,
+                interval_months: h.interval_months || 90,
                 notes: h.notes || (isInitial ? 'Pemasangan awal filter unit baru' : 'Pergantian elemen filter MicroClean'),
                 technician: h.technician || 'Teknisi Lapangan',
                 photos: matchedPhotos
@@ -81,7 +81,7 @@ export async function GET({ params }) {
                 title: 'Pemasangan Awal Unit Filter',
                 is_initial: true,
                 service_date: installDateStr,
-                interval_months: tank.interval_months || 3,
+                interval_months: tank.interval_months || 90,
                 notes: tank.notes || 'Pemasangan awal filter unit baru',
                 technician: tank.pic_manager || 'Teknisi Lapangan',
                 photos: matchedPhotos
@@ -106,7 +106,7 @@ export async function PATCH({ params, request }) {
 
         const {
             service_date,
-            interval_months = 3,
+            interval_months = 90,
             notes = '',
             technician = 'Teknisi Lapangan',
             status_mc = null,
@@ -126,7 +126,8 @@ export async function PATCH({ params, request }) {
         }
 
         const svcDateStr = formatLocalDate(service_date);
-        const nextDateStr = addMonthsToDate(svcDateStr, parseInt(interval_months));
+        const intervalVal = parseInt(body.interval_days || interval_months) || 90;
+        const nextDateStr = calculateNextMaintenanceDate(svcDateStr, intervalVal);
 
         // 1. Update tabel tanks (termasuk tipe filter / equipment baru jika ada perubahan)
         await query(
@@ -138,14 +139,14 @@ export async function PATCH({ params, request }) {
                  status_mc        = 'AKTIF',
                  updated_at       = CURRENT_TIMESTAMP
              WHERE id = ?`,
-            [equipment || null, svcDateStr, nextDateStr, parseInt(interval_months), id]
+            [equipment || null, svcDateStr, nextDateStr, intervalVal, id]
         );
 
         // 2. Insert ke maintenance_history
         const maintId = await insert('maintenance_history', {
             tank_id:          parseInt(id),
             service_date:     svcDateStr,
-            interval_months:  parseInt(interval_months),
+            interval_months:  intervalVal,
             notes:            notes || '',
             technician:       technician
         });

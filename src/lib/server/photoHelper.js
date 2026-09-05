@@ -91,6 +91,7 @@ export async function getValidPhotos(filters = {}) {
             group:         groupName,
             region:        region,
             estate:        estate,
+            location_type: item.location_type || 'Kebun',
             equipment:     dbInfo?.equipment || 'MicroClean Filter',
             unit_name:     dbInfo?.tank_capacity || 'Tangki Timbun Solar',
             tank_capacity: dbInfo?.tank_capacity || 'Tangki Timbun Solar'
@@ -101,7 +102,8 @@ export async function getValidPhotos(filters = {}) {
 }
 
 /**
- * Scan rekursif folder static/uploads/[group]/[region]/[estate]/[file]
+ * Scan rekursif folder static/uploads/[group]/[region]/[estate]/[location_type]/[file]
+ * Backward-compatible: juga mengenali file lama yang langsung di level estate
  */
 async function scanUploadsDir(baseDir) {
     const list = [];
@@ -126,20 +128,46 @@ async function scanUploadsDir(baseDir) {
                     const estateName = e.name.replace(/_/g, ' ');
                     const estatePath = join(regionPath, e.name);
 
-                    const files = await readdir(estatePath, { withFileTypes: true });
-                    for (const f of files) {
-                        if (f.isFile() && isImageFile(f.name)) {
-                            const fullPath = join(estatePath, f.name);
+                    const estateContents = await readdir(estatePath, { withFileTypes: true });
+
+                    for (const item of estateContents) {
+                        if (item.isDirectory()) {
+                            // === Struktur Baru: Group/Region/Estate/LocType/file ===
+                            const locType = item.name.replace(/_/g, ' ');
+                            const locTypePath = join(estatePath, item.name);
+
+                            const files = await readdir(locTypePath, { withFileTypes: true });
+                            for (const f of files) {
+                                if (f.isFile() && isImageFile(f.name)) {
+                                    const fullPath = join(locTypePath, f.name);
+                                    const fileStat = await stat(fullPath).catch(() => null);
+                                    const relPath = `${g.name}/${r.name}/${e.name}/${item.name}/${f.name}`;
+
+                                    list.push({
+                                        filename:     f.name,
+                                        relPath:      relPath,
+                                        group:        groupName,
+                                        region:       regionName,
+                                        estate:       estateName,
+                                        location_type: locType,
+                                        mtime:        fileStat?.mtime || new Date()
+                                    });
+                                }
+                            }
+                        } else if (item.isFile() && isImageFile(item.name)) {
+                            // === Backward Compat: file langsung di level estate ===
+                            const fullPath = join(estatePath, item.name);
                             const fileStat = await stat(fullPath).catch(() => null);
-                            const relPath = `${g.name}/${r.name}/${e.name}/${f.name}`;
+                            const relPath = `${g.name}/${r.name}/${e.name}/${item.name}`;
 
                             list.push({
-                                filename: f.name,
-                                relPath:  relPath,
-                                group:    groupName,
-                                region:   regionName,
-                                estate:   estateName,
-                                mtime:    fileStat?.mtime || new Date()
+                                filename:     item.name,
+                                relPath:      relPath,
+                                group:        groupName,
+                                region:       regionName,
+                                estate:       estateName,
+                                location_type: 'Kebun', // default untuk data lama
+                                mtime:        fileStat?.mtime || new Date()
                             });
                         }
                     }

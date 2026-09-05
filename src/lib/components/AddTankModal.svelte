@@ -14,12 +14,13 @@
 
     let group = $state('CBI Group');
     let estate = $state('');
+    let locationType = $state('Kebun');
     let region = $state('');
     let unitName = $state('Tangki Timbun Solar');
     let selectedFilterId = $state('');
     let equipment = $state('MDF 250-1');
     let installDate = $state(getTodayString());
-    let intervalMonths = $state(3);
+    let intervalDays = $state(90);
     let picManager = $state('');
     let notes = $state('');
 
@@ -31,13 +32,9 @@
     let isSaving = $state(false);
     let formError = $state('');
 
-    // Selected filter stock item
+    // Selected filter item
     let selectedStockItem = $derived(
         $filterStockStore.find(i => String(i.id) === String(selectedFilterId)) || null
-    );
-    let isStockDepleted = $derived(selectedStockItem ? selectedStockItem.quantity <= 0 : false);
-    let isStockLow = $derived(
-        selectedStockItem ? selectedStockItem.quantity > 0 && selectedStockItem.quantity <= selectedStockItem.min_quantity : false
     );
 
     $effect(() => {
@@ -71,42 +68,35 @@
         e.preventDefault();
         if (isSaving) return;
 
-        if (isStockDepleted) {
-            formError = `Stok untuk filter "${selectedStockItem?.filter_name}" sudah habis (0 pcs). Pemasangan tidak dapat dilakukan sebelum stok diisi kembali di menu Kelola Data Filter.`;
-            return;
-        }
-
         isSaving = true;
         formError = '';
 
         try {
-            // 1. Kurangi stok di filterStockStore jika ada filter yang dipilih
-            if (selectedStockItem && selectedStockItem.id) {
-                await filterStockStore.adjustQuantity(selectedStockItem.id, -1);
-            }
-
-            // 2. Simpan record tangki
+            // Simpan record tangki
             await recordsStore.addTank({
                 group,
                 estate: estate.trim(),
+                location_type: locationType.trim() || 'Kebun',
                 region: region.trim() || 'Umum',
                 unit_name: unitName.trim() || 'Tangki Timbun Solar',
                 tank_capacity: unitName.trim() || 'Tangki Timbun Solar',
                 equipment: (equipment || selectedStockItem?.filter_name || 'MicroClean Filter').trim(),
                 install_date: installDate,
                 last_maintenance: installDate,
-                interval_months: parseInt(intervalMonths),
+                interval_months: parseInt(intervalDays) || 90,
+                interval_days: parseInt(intervalDays) || 90,
                 pic_manager: picManager.trim(),
                 notes: notes.trim()
             }, photoFile);
 
             notificationStore.success(
                 'Unit Berhasil Dipasang',
-                `Pemasangan filter di ${estate.trim()} (${group}) berhasil disimpan. Stok dipotong (-1).`
+                `Pemasangan filter di ${estate.trim()} - ${locationType.trim()} (${group}) berhasil disimpan.`
             );
 
             // Reset form & close
             estate = '';
+            locationType = 'Kebun';
             region = '';
             picManager = '';
             notes = '';
@@ -123,21 +113,21 @@
 </script>
 
 {#if isOpen}
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md animate-fadeIn">
-        <div class="bg-[#0d1424] border border-slate-700/60 rounded-3xl w-full max-w-4xl max-h-[94vh] flex flex-col shadow-2xl relative overflow-hidden text-left">
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-5 bg-black/85 backdrop-blur-md animate-fadeIn">
+        <div class="bg-[#0d1424] border border-slate-700/60 rounded-2xl sm:rounded-3xl w-full max-w-4xl max-h-[96vh] sm:max-h-[94vh] flex flex-col shadow-2xl relative overflow-hidden text-left">
             
             <!-- Modal Header -->
-            <div class="p-4 sm:p-5 border-b border-slate-800/80 bg-slate-900/50 flex justify-between items-center shrink-0">
-                <div class="flex items-center gap-3">
-                    <span class="w-9 h-9 rounded-xl bg-sky-500/15 border border-sky-500/25 flex items-center justify-center text-lg shrink-0">➕</span>
+            <div class="p-3.5 sm:p-5 border-b border-slate-800/80 bg-slate-900/50 flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-2.5 sm:gap-3">
+                    <span class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-sky-500/15 border border-sky-500/25 flex items-center justify-center text-base sm:text-lg shrink-0">➕</span>
                     <div>
-                        <h3 class="text-base font-bold text-white leading-snug">Tambah Pemasangan Filter Baru</h3>
-                        <p class="text-[11px] text-slate-400">Pencatatan awal pemasangan unit filter & foto dokumentasi fisik</p>
+                        <h3 class="text-sm sm:text-base font-bold text-white leading-snug">Tambah Pemasangan Filter Baru</h3>
+                        <p class="text-[10px] sm:text-[11px] text-slate-400">Pencatatan awal pemasangan unit filter & foto dokumentasi fisik</p>
                     </div>
                 </div>
                 <button 
                     onclick={onClose} 
-                    class="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors text-base"
+                    class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors text-sm sm:text-base cursor-pointer"
                 >
                     ✕
                 </button>
@@ -145,7 +135,7 @@
 
             <!-- Modal Body (Landscape 2-Columns) -->
             <form onsubmit={handleSubmit} class="flex flex-col flex-1 overflow-hidden">
-                <div class="p-4 sm:p-6 overflow-y-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-5">
+                <div class="p-3.5 sm:p-6 overflow-y-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
                     
                     <!-- LEFT COLUMN (Form Data 7/12) -->
                     <div class="lg:col-span-7 space-y-3.5">
@@ -175,86 +165,146 @@
                             </div>
 
                             <div>
-                                <label for="region-input" class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">Wilayah / Regional *</label>
-                                <input 
-                                    type="text" 
-                                    id="region-input" 
-                                    bind:value={region}
-                                    required
-                                    placeholder="Contoh: Kalbar / Kaltim"
-                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500 font-medium"
-                                />
+                                <label for="region-input" class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">
+                                    Wilayah / Provinsi *
+                                </label>
+                                <div class="relative">
+                                    <input 
+                                        type="text" 
+                                        id="region-input" 
+                                        list="region-presets"
+                                        bind:value={region}
+                                        required
+                                        placeholder="Pilih atau ketik: Kaltim, Kalteng, Sumut..."
+                                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500 font-medium"
+                                    />
+                                    <datalist id="region-presets">
+                                        <!-- Kalimantan -->
+                                        <option value="KALTIM">Kalimantan Timur (Kaltim)</option>
+                                        <option value="KALTENG">Kalimantan Tengah (Kalteng)</option>
+                                        <option value="KALBAR">Kalimantan Barat (Kalbar)</option>
+                                        <option value="KALSEL">Kalimantan Selatan (Kalsel)</option>
+                                        <option value="KALTARA">Kalimantan Utara (Kaltara)</option>
+                                        <!-- Sumatra -->
+                                        <option value="SUMUT">Sumatera Utara (Sumut)</option>
+                                        <option value="SUMSEL">Sumatera Selatan (Sumsel)</option>
+                                        <option value="SUMBAR">Sumatera Barat (Sumbar)</option>
+                                        <option value="RIAU">Riau</option>
+                                        <option value="KEPRI">Kepulauan Riau (Kepri)</option>
+                                        <option value="JAMBI">Jambi</option>
+                                        <option value="ACEH">Aceh</option>
+                                        <option value="LAMPUNG">Lampung</option>
+                                        <option value="BENGKULU">Bengkulu</option>
+                                        <option value="BABEL">Kep. Bangka Belitung (Babel)</option>
+                                        <!-- Jawa -->
+                                        <option value="JABAR">Jawa Barat (Jabar)</option>
+                                        <option value="JATENG">Jawa Tengah (Jateng)</option>
+                                        <option value="JATIM">Jawa Timur (Jatim)</option>
+                                        <option value="BANTEN">Banten</option>
+                                        <option value="DKI">DKI Jakarta</option>
+                                        <option value="DIY">DI Yogyakarta</option>
+                                        <!-- Sulawesi -->
+                                        <option value="SULSEL">Sulawesi Selatan (Sulsel)</option>
+                                        <option value="SULTENG">Sulawesi Tengah (Sulteng)</option>
+                                        <option value="SULTRA">Sulawesi Tenggara (Sultra)</option>
+                                        <option value="SULUT">Sulawesi Utara (Sulut)</option>
+                                        <option value="GORONTALO">Gorontalo</option>
+                                        <option value="SULBAR">Sulawesi Barat (Sulbar)</option>
+                                        <!-- Bali & Nusa Tenggara -->
+                                        <option value="BALI">Bali</option>
+                                        <option value="NTB">Nusa Tenggara Barat (NTB)</option>
+                                        <option value="NTT">Nusa Tenggara Timur (NTT)</option>
+                                        <!-- Maluku & Papua -->
+                                        <option value="MALUKU">Maluku</option>
+                                        <option value="MALUT">Maluku Utara (Malut)</option>
+                                        <option value="PAPUA">Papua</option>
+                                        <option value="PAPUA BARAT">Papua Barat</option>
+                                    </datalist>
+                                </div>
+                                <!-- Quick pills -->
+                                <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                                    <span class="text-[9px] text-slate-500 font-semibold">Cepat:</span>
+                                    {#each ['KALTIM', 'KALTENG', 'KALBAR', 'KALTARA', 'SUMUT', 'RIAU'] as quickReg}
+                                        <button
+                                            type="button"
+                                            onclick={() => region = quickReg}
+                                            class="px-1.5 py-0.5 rounded text-[9px] font-bold border transition-colors cursor-pointer
+                                                {region === quickReg 
+                                                    ? 'bg-amber-500/20 border-amber-400 text-amber-400' 
+                                                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'}"
+                                        >
+                                            {quickReg}
+                                        </button>
+                                    {/each}
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Estate & Nama Unit -->
+                        <!-- Nama PT/Estate & Tipe Lokasi -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                                <label for="estate-input" class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">Kebun / Estate / PT *</label>
+                                <label for="estate-input" class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">Nama PT / Estate *</label>
                                 <input 
                                     type="text" 
                                     id="estate-input" 
                                     bind:value={estate}
                                     required
-                                    placeholder="Contoh: MJP I, BPK Estate"
+                                    placeholder="Contoh: PT. Sawit Makmur / MJP I"
                                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500 font-medium"
                                 />
                             </div>
 
                             <div>
-                                <label for="unit-name-input" class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">Nama / Tipe Unit *</label>
+                                <label for="location-type-input" class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">Tipe Lokasi / Peruntukan *</label>
                                 <input 
                                     type="text" 
-                                    id="unit-name-input" 
-                                    bind:value={unitName}
+                                    id="location-type-input" 
+                                    bind:value={locationType}
                                     required
-                                    placeholder="Contoh: Tangki Timbun Solar"
+                                    placeholder="Contoh: Kebun / Pabrikan / PKS / Gudang"
                                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500 font-medium"
                                 />
                             </div>
                         </div>
 
-                        <!-- Model Filter & Stock Selection -->
+                        <!-- Nama / Tipe Unit -->
                         <div>
-                            <label for="equipment-select" class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1 flex justify-between items-center">
-                                <span>Tipe Filter Terpasang *</span>
-                                {#if selectedStockItem}
-                                    <span class="text-[11px] font-mono font-bold {isStockDepleted ? 'text-rose-400' : isStockLow ? 'text-amber-400' : 'text-emerald-400'}">
-                                        Stok: {selectedStockItem.quantity} pcs {isStockDepleted ? '(HABIS ❌)' : ''}
-                                    </span>
-                                {/if}
+                            <label for="unit-name-input" class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">Nama / Tipe Unit *</label>
+                            <input 
+                                type="text" 
+                                id="unit-name-input" 
+                                bind:value={unitName}
+                                required
+                                placeholder="Contoh: Tangki Timbun 1, Tangki Timbun 2, Genset"
+                                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500 font-medium"
+                            />
+                            <span class="text-[10px] text-slate-500 mt-1 block">Beri nomor/nama pembeda jika lokasi memiliki lebih dari 1 unit filter (misal: Tangki Timbun 1, Tangki Timbun 2).</span>
+                        </div>
+
+                        <!-- Model Filter & Stock Selection -->
+                        <!-- Model Filter Selection -->
+                        <div>
+                            <label for="equipment-select" class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">
+                                Tipe Filter Terpasang *
                             </label>
                             
                             <select
                                 id="equipment-select"
                                 value={selectedFilterId}
                                 onchange={handleFilterSelect}
-                                class="w-full bg-slate-950 border {isStockDepleted ? 'border-rose-500/60 text-rose-300' : 'border-slate-800 text-white'} rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-sky-500 font-medium"
+                                class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-sky-500 font-medium"
                             >
                                 {#if $filterStockStore.length === 0}
                                     <option value="">(Belum ada data tipe filter di sistem)</option>
                                 {:else}
                                     {#each $filterStockStore as item}
                                         <option value={String(item.id)}>
-                                            {item.filter_name} — (Sisa: {item.quantity} pcs {item.quantity === 0 ? '❌ HABIS' : item.quantity <= item.min_quantity ? '⚠️ MENIPIS' : '✅'})
+                                            {item.filter_name}
                                         </option>
                                     {/each}
                                 {/if}
                             </select>
                         </div>
-
-                        <!-- Stock Warnings -->
-                        {#if isStockDepleted}
-                            <div class="p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
-                                <span class="text-sm">🚫</span>
-                                <span class="text-[11px]"><b>Stok filter habis (0 pcs).</b> Tambahkan stok di menu Kelola Data Filter sebelum menyimpan.</span>
-                            </div>
-                        {:else if isStockLow}
-                            <div class="p-2 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-[11px] flex items-center gap-2">
-                                <span>⚠️</span>
-                                <span>Peringatan: Stok filter ini tersisa <b>{selectedStockItem?.quantity} pcs</b>.</span>
-                            </div>
-                        {/if}
 
                         <!-- Tanggal Pasang & Interval Servis -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -270,16 +320,23 @@
                             </div>
 
                             <div>
-                                <label for="interval-select" class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">Interval Maintenance *</label>
-                                <select 
-                                    id="interval-select" 
-                                    bind:value={intervalMonths}
-                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500 font-medium"
-                                >
-                                    <option value={3}>3 Bulan (90 Hari)</option>
-                                    <option value={4}>4 Bulan (120 Hari)</option>
-                                    <option value={6}>6 Bulan (180 Hari)</option>
-                                </select>
+                                <label for="interval-input" class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">
+                                    Interval Maintenance (Hari) *
+                                </label>
+                                <div class="relative">
+                                    <input 
+                                        type="number" 
+                                        id="interval-input" 
+                                        bind:value={intervalDays}
+                                        min="1"
+                                        max="365"
+                                        required
+                                        placeholder="Contoh: 90"
+                                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500 font-medium pr-14"
+                                    />
+                                    <span class="absolute right-3 top-2 text-xs text-slate-500 pointer-events-none font-semibold">Hari</span>
+                                </div>
+                                <span class="text-[10px] text-slate-500 mt-1 block">Ketik jumlah hari interval maintenance rutin (misal: 30, 60, 90 hari)</span>
                             </div>
                         </div>
 
@@ -399,17 +456,14 @@
                         </button>
                         <button 
                             type="submit" 
-                            disabled={isSaving || isStockDepleted}
-                            class="px-5 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-400 hover:to-cyan-400 text-white text-xs font-bold shadow-lg shadow-sky-500/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 transition-all active:scale-95"
-                            title={isStockDepleted ? 'Stok filter habis, tidak dapat menyimpan pemasangan' : ''}
+                            disabled={isSaving}
+                            class="px-5 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-400 hover:to-cyan-400 text-white text-xs font-bold shadow-lg shadow-sky-500/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 transition-all active:scale-95 cursor-pointer"
                         >
                             {#if isSaving}
                                 <span class="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                                 <span>Menyimpan...</span>
-                            {:else if isStockDepleted}
-                                <span>🚫 Stok Habis</span>
                             {:else}
-                                <span>💾 Simpan & Potong Stok (-1)</span>
+                                <span>💾 Simpan & Catat Pemasangan</span>
                             {/if}
                         </button>
                     </div>

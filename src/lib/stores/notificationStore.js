@@ -166,16 +166,16 @@ export function checkAndNotify() {
     }
 
     // ──────────────────────────────────────────────
-    // 2. NOTICE (Warning) — ≤30 hari, harus hubungi PIC
+    // 2. NOTICE (Warning) — ≤10 hari, harus hubungi PIC
     // ──────────────────────────────────────────────
     const noticeUnits = records.filter(r =>
         r.computed_status === 'NOTICE'
     );
     if (noticeUnits.length > 0) {
-        const urgent7days = noticeUnits.filter(u => u.days_left <= 7);
-        const message = urgent7days.length > 0
-            ? `${urgent7days.length} unit sisa ≤ 7 hari! Segera hubungi PIC konsumen.\nTotal notice: ${noticeUnits.length} unit.`
-            : `${noticeUnits.length} unit memasuki masa peringatan (≤30 hari). Segera jadwalkan kunjungan servis.`;
+        const urgent5days = noticeUnits.filter(u => u.days_left <= 5);
+        const message = urgent5days.length > 0
+            ? `${urgent5days.length} unit sisa ≤ 5 hari! Segera hubungi PIC konsumen.\nTotal notice: ${noticeUnits.length} unit.`
+            : `${noticeUnits.length} unit memasuki masa peringatan (≤10 hari). Segera jadwalkan kunjungan servis.`;
 
         notifications.push({
             type: 'warning',
@@ -190,42 +190,6 @@ export function checkAndNotify() {
         });
     }
 
-    // ──────────────────────────────────────────────
-    // 3. STOK HABIS / MENIPIS (Warning)
-    // ──────────────────────────────────────────────
-    const habisItems = stock.filter(s => s.quantity === 0);
-    const menipisItems = stock.filter(s => s.quantity > 0 && s.quantity <= s.min_quantity);
-
-    if (habisItems.length > 0) {
-        const names = habisItems.slice(0, 3).map(s => `• ${s.filter_name}`).join('\n');
-        notifications.push({
-            type: 'urgent',
-            title: `📦 ${habisItems.length} Tipe Filter HABIS!`,
-            message: habisItems.length <= 3
-                ? `${names}\nPemasangan & servis tidak bisa dilakukan sampai stok ditambah.`
-                : `${names}\n... +${habisItems.length - 3} lainnya. Pemasangan & servis diblokir.`,
-            options: {
-                icon: '📦',
-                actionLabel: 'Kelola Stok',
-                actionHref: '/stock',
-                duration: 15000
-            }
-        });
-    }
-
-    if (menipisItems.length > 0 && habisItems.length === 0) {
-        notifications.push({
-            type: 'warning',
-            title: `📦 Stok Filter Menipis`,
-            message: `${menipisItems.length} tipe filter tersisa sedikit. Segera lakukan pengadaan/restok.`,
-            options: {
-                icon: '📦',
-                actionLabel: 'Cek Stok',
-                actionHref: '/stock',
-                duration: 10000
-            }
-        });
-    }
 
     // ──────────────────────────────────────────────
     // 4. UNIT TERLANTAR (>180 hari tanpa servis)

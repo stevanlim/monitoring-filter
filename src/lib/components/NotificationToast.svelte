@@ -2,6 +2,7 @@
     import { fly, fade } from 'svelte/transition';
     import { flip } from 'svelte/animate';
     import { notificationStore, checkAndNotify, muteStore, initMuteState } from '$lib/stores/notificationStore.js';
+    import { accentColor } from '$lib/stores/themeStore.js';
     import {
         playUrgentSound,
         playWarningSound,
@@ -97,13 +98,14 @@
         switch (type) {
             case 'urgent':
                 return {
-                    bg: 'bg-rose-950/95 border-rose-500/50',
-                    iconBg: 'bg-rose-500/20 border-rose-500/30',
-                    titleColor: 'text-rose-200',
-                    msgColor: 'text-rose-300/90',
+                    bg: 'bg-rose-950/98 border-rose-500/70',
+                    iconBg: 'bg-rose-500/25 border-rose-400/50',
+                    titleColor: 'text-rose-100',
+                    msgColor: 'text-rose-200/90',
                     btnBg: 'bg-rose-600 hover:bg-rose-500 text-white',
-                    progressColor: 'bg-rose-500',
-                    glow: 'shadow-xl shadow-rose-500/10'
+                    progressColor: 'bg-rose-400',
+                    glow: 'shadow-2xl shadow-rose-500/40',
+                    extra: 'urgent-pulse'
                 };
             case 'warning':
                 return {
@@ -113,7 +115,8 @@
                     msgColor: 'text-amber-300/80',
                     btnBg: 'bg-amber-600 hover:bg-amber-500 text-white',
                     progressColor: 'bg-amber-500',
-                    glow: 'shadow-xl shadow-amber-500/10'
+                    glow: 'shadow-xl shadow-amber-500/10',
+                    extra: ''
                 };
             case 'success':
                 return {
@@ -123,7 +126,8 @@
                     msgColor: 'text-emerald-300/80',
                     btnBg: 'bg-emerald-600 hover:bg-emerald-500 text-white',
                     progressColor: 'bg-emerald-500',
-                    glow: 'shadow-xl shadow-emerald-500/10'
+                    glow: 'shadow-xl shadow-emerald-500/10',
+                    extra: ''
                 };
             case 'info':
             default:
@@ -134,10 +138,14 @@
                     msgColor: 'text-sky-300/80',
                     btnBg: 'bg-sky-600 hover:bg-sky-500 text-white',
                     progressColor: 'bg-sky-500',
-                    glow: 'shadow-xl shadow-sky-500/10'
+                    glow: 'shadow-xl shadow-sky-500/10',
+                    extra: ''
                 };
         }
     }
+
+    // Deteksi apakah ada notifikasi urgent aktif (untuk overlay merah)
+    let showUrgentOverlay = $derived($notificationStore.some(n => n.type === 'urgent'));
 </script>
 
 <!-- Invisible interaction catcher (untuk mengaktifkan Audio API) -->
@@ -147,20 +155,35 @@
     ontouchstart={handleFirstInteraction}
 />
 
+<!-- ⚠️ RED SCREEN FLASH — Muncul saat ada notifikasi JATUH TEMPO aktif -->
+{#if showUrgentOverlay}
+    <div
+        class="fixed inset-0 z-[85] pointer-events-none"
+        style="box-shadow: inset 0 0 60px 20px rgba(239,68,68,0.18); animation: screen-flash 1.1s ease-in-out infinite alternate;"
+        aria-hidden="true"
+    ></div>
+{/if}
+
 <!-- Mute Toggle Button (Floating) -->
 <div class="fixed bottom-5 left-5 z-[80]">
     <button
+        type="button"
         onclick={handleToggleMute}
-        class="w-10 h-10 rounded-full border flex items-center justify-center transition-all active:scale-90 {$muteStore ? 'bg-slate-900/90 border-slate-700 text-slate-500 hover:border-slate-600' : 'bg-sky-950/90 border-sky-500/40 text-sky-400 hover:border-sky-400'} backdrop-blur-md shadow-lg"
+        class="w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all active:scale-90 backdrop-blur-md shadow-lg cursor-pointer
+            {$muteStore 
+                ? 'bg-slate-900/95 border-slate-700 text-slate-400 hover:border-slate-500 hover:text-slate-200' 
+                : ($accentColor === 'yellow' 
+                    ? 'bg-amber-500/15 border-amber-400 text-amber-400 hover:bg-amber-500/25 hover:border-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.35)]' 
+                    : 'bg-sky-500/15 border-sky-400 text-sky-400 hover:bg-sky-500/25 hover:border-sky-300 shadow-[0_0_15px_rgba(14,165,233,0.35)]')}"
         title={$muteStore ? 'Notifikasi dimatikan — Klik untuk mengaktifkan' : 'Notifikasi aktif — Klik untuk mute'}
     >
         {#if $muteStore}
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
             </svg>
         {:else}
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-colors {$accentColor === 'yellow' ? 'text-amber-400 stroke-amber-400' : 'text-sky-400 stroke-sky-400'}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
             </svg>
         {/if}
@@ -181,7 +204,7 @@
     {#each $notificationStore as notif (notif.id)}
         {@const styles = getTypeStyles(notif.type)}
         <div
-            class="pointer-events-auto rounded-2xl border backdrop-blur-md overflow-hidden {styles.bg} {styles.glow}"
+            class="pointer-events-auto rounded-2xl border backdrop-blur-md overflow-hidden {styles.bg} {styles.glow} {styles.extra || ''}"
             in:fly={{ x: 320, duration: 400, opacity: 0 }}
             out:fly={{ x: 320, duration: 300, opacity: 0 }}
             animate:flip={{ duration: 300 }}
@@ -237,5 +260,22 @@
     @keyframes notif-progress {
         from { width: 100%; }
         to { width: 0%; }
+    }
+
+    /* Pulsing red border glow untuk notifikasi JATUH TEMPO */
+    @keyframes urgent-border-pulse {
+        0%   { box-shadow: 0 0 10px 2px rgba(239, 68, 68, 0.35), 0 20px 40px rgba(239,68,68,0.3); border-color: rgba(239,68,68,0.6); }
+        50%  { box-shadow: 0 0 28px 8px rgba(239, 68, 68, 0.65), 0 20px 40px rgba(239,68,68,0.4); border-color: rgba(239,68,68,1.0); }
+        100% { box-shadow: 0 0 10px 2px rgba(239, 68, 68, 0.35), 0 20px 40px rgba(239,68,68,0.3); border-color: rgba(239,68,68,0.6); }
+    }
+
+    :global(.urgent-pulse) {
+        animation: urgent-border-pulse 0.9s ease-in-out infinite;
+    }
+
+    /* Subtle red vignette flash di tepi layar */
+    @keyframes screen-flash {
+        0%   { opacity: 0.4; }
+        100% { opacity: 1.0; }
     }
 </style>

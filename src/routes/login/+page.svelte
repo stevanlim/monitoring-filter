@@ -1,6 +1,9 @@
 <script>
+    import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
     import YetiMascot from '$lib/components/YetiMascot.svelte';
+    import ThemeSelector from '$lib/components/ThemeSelector.svelte';
+    import { themeMode, accentColor, initTheme } from '$lib/stores/themeStore.js';
 
     // Step state: 1 = Username & Password, 2 = PIN 6-Digit
     let step = $state(1);
@@ -20,6 +23,10 @@
     let errorMessage = $state('');
     let isShaking = $state(false);
     let mascotMode = $state('idle'); // 'idle' | 'username' | 'password' | 'peek' | 'pin' | 'success' | 'error'
+
+    onMount(() => {
+        initTheme();
+    });
 
     // Update mascot mode based on password visibility & focus
     function handleUsernameFocus() {
@@ -229,18 +236,28 @@
     <title>Login Masuk — PT. Anugerah Rezeki Teknindo</title>
 </svelte:head>
 
-<div class="min-h-screen bg-[#080C14] text-slate-100 flex flex-col justify-center items-center p-4 relative overflow-hidden select-none">
+<div
+    class="min-h-screen transition-colors duration-200 flex flex-col justify-center items-center p-3 sm:p-4 py-8 sm:py-12 relative overflow-hidden select-none"
+    style="background: var(--bg-page, #080C14); color: var(--text-main, #f8fafc);"
+>
+    <!-- Top Right Theme & Accent Selector Widget -->
+    <div class="fixed top-3 right-3 sm:top-6 sm:right-6 z-50">
+        <ThemeSelector />
+    </div>
 
     <!-- Ambient Glow Blobs -->
-    <div class="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-sky-600/15 blur-[120px] pointer-events-none"></div>
-    <div class="absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-cyan-500/15 blur-[120px] pointer-events-none"></div>
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-indigo-950/20 blur-[150px] pointer-events-none"></div>
+    <div class="absolute -top-40 -left-40 w-96 h-96 rounded-full blur-[120px] pointer-events-none transition-colors duration-500
+        {$accentColor === 'yellow' ? 'bg-amber-500/20' : 'bg-sky-600/15'}"></div>
+    <div class="absolute -bottom-40 -right-40 w-96 h-96 rounded-full blur-[120px] pointer-events-none transition-colors duration-500
+        {$accentColor === 'yellow' ? 'bg-yellow-500/15' : 'bg-cyan-500/15'}"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[150px] pointer-events-none
+        {$themeMode === 'light' ? 'bg-slate-300/30' : 'bg-indigo-950/20'}"></div>
 
     <!-- Container Form -->
-    <div class="w-full max-w-md relative z-10">
+    <div class="w-full max-w-[420px] px-1 sm:px-0 relative z-10">
 
         <!-- Yeti Mascot sitting on top of the card -->
-        <div class="mb-[-28px] relative z-20">
+        <div class="mb-[-22px] sm:mb-[-28px] relative z-20 scale-90 sm:scale-100 origin-bottom">
             <YetiMascot
                 mode={mascotMode}
                 charCount={username.length}
@@ -250,19 +267,21 @@
 
         <!-- Login Card -->
         <div
-            class="rounded-3xl border border-slate-700/60 bg-[#0D1424]/90 backdrop-blur-xl p-7 sm:p-8 shadow-2xl relative transition-all duration-300 {isShaking ? 'animate-[wiggle_0.4s_ease-in-out]' : ''}"
-            style="box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8), 0 0 40px rgba(56,189,248,0.08);"
+            class="rounded-2xl sm:rounded-3xl border transition-all duration-300 p-5 sm:p-8 shadow-2xl relative
+                {$themeMode === 'light' ? 'bg-white/95 border-slate-200 text-slate-800' : 'bg-[#0D1424]/90 border-slate-700/60 text-white backdrop-blur-xl'}
+                {isShaking ? 'animate-[wiggle_0.4s_ease-in-out]' : ''}"
+            style="box-shadow: 0 25px 50px -12px rgba(0,0,0,{$themeMode === 'light' ? '0.1' : '0.8'}), 0 0 40px {$accentColor === 'yellow' ? 'rgba(245,158,11,0.18)' : 'rgba(56,189,248,0.12)'};"
         >
 
             <!-- Brand Header -->
-            <div class="text-center pt-2 pb-5 border-b border-slate-800/80">
-                <div class="text-[11px] font-bold tracking-widest text-sky-400 uppercase">
+            <div class="text-center pt-2 pb-5 border-b {$themeMode === 'light' ? 'border-slate-100' : 'border-slate-800/80'}">
+                <div class="text-[11px] font-bold tracking-widest uppercase transition-colors {$accentColor === 'yellow' ? 'text-amber-500' : 'text-sky-400'}">
                     PT. Anugerah Rezeki Teknindo
                 </div>
-                <h1 class="text-xl sm:text-2xl font-black text-white mt-1">
+                <h1 class="text-xl sm:text-2xl font-black mt-1 {$themeMode === 'light' ? 'text-slate-900' : 'text-white'}">
                     MicroClean Diesel Filter
                 </h1>
-                <p class="text-xs text-slate-400 mt-1">
+                <p class="text-xs mt-1 {$themeMode === 'light' ? 'text-slate-500' : 'text-slate-400'}">
                     {step === 1 ? 'Silakan masuk ke panel sistem monitoring' : 'Tahap 2: Verifikasi PIN Keamanan'}
                 </p>
             </div>
@@ -281,7 +300,7 @@
 
                     <!-- Username Field -->
                     <div>
-                        <label for="login-username" class="block text-xs font-semibold text-slate-300 mb-1.5">
+                        <label for="login-username" class="block text-xs font-semibold mb-1.5 {$themeMode === 'light' ? 'text-slate-700' : 'text-slate-300'}">
                             Username
                         </label>
                         <div class="relative">
@@ -294,7 +313,13 @@
                                 required
                                 autocomplete="username"
                                 placeholder="Masukkan username admin"
-                                class="w-full bg-slate-950/80 border border-slate-700/70 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-500/20 transition-all pl-10"
+                                class="w-full rounded-xl px-4 py-3 text-sm pl-10 transition-all focus:outline-none focus:ring-2
+                                    {$themeMode === 'light'
+                                        ? 'bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white'
+                                        : 'bg-slate-950/80 border border-slate-700/70 text-white placeholder-slate-500'}
+                                    {$accentColor === 'yellow'
+                                        ? 'focus:border-amber-400 focus:ring-amber-500/20'
+                                        : 'focus:border-sky-400 focus:ring-sky-500/20'}"
                             />
                             <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-base">👤</span>
                         </div>
@@ -303,13 +328,14 @@
                     <!-- Password Field with Show/Hide Toggle -->
                     <div>
                         <div class="flex justify-between items-center mb-1.5">
-                            <label for="login-password" class="block text-xs font-semibold text-slate-300">
+                            <label for="login-password" class="block text-xs font-semibold {$themeMode === 'light' ? 'text-slate-700' : 'text-slate-300'}">
                                 Password
                             </label>
                             <button
                                 type="button"
                                 onclick={toggleShowPassword}
-                                class="text-[11px] text-sky-400 hover:text-sky-300 transition-colors flex items-center gap-1"
+                                class="text-[11px] font-medium transition-colors flex items-center gap-1 cursor-pointer
+                                    {$accentColor === 'yellow' ? 'text-amber-500 hover:text-amber-600' : 'text-sky-400 hover:text-sky-300'}"
                             >
                                 <span>{showPassword ? '🙈 Sembunyikan' : '👁️ Lihat'}</span>
                             </button>
@@ -324,14 +350,20 @@
                                 required
                                 autocomplete="current-password"
                                 placeholder="Masukkan password"
-                                class="w-full bg-slate-950/80 border border-slate-700/70 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-500/20 transition-all pl-10 pr-10"
+                                class="w-full rounded-xl px-4 py-3 text-sm pl-10 pr-10 transition-all focus:outline-none focus:ring-2
+                                    {$themeMode === 'light'
+                                        ? 'bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white'
+                                        : 'bg-slate-950/80 border border-slate-700/70 text-white placeholder-slate-500'}
+                                    {$accentColor === 'yellow'
+                                        ? 'focus:border-amber-400 focus:ring-amber-500/20'
+                                        : 'focus:border-sky-400 focus:ring-sky-500/20'}"
                             />
                             <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-base">🔒</span>
                             
                             <button
                                 type="button"
                                 onclick={toggleShowPassword}
-                                class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors text-sm"
+                                class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors text-sm cursor-pointer"
                                 title={showPassword ? 'Tutup mata' : 'Buka intip'}
                             >
                                 {showPassword ? '🔓' : '👁️'}
@@ -343,10 +375,13 @@
                     <button
                         type="submit"
                         disabled={isLoading}
-                        class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-400 hover:to-cyan-400 text-white text-sm font-bold shadow-lg shadow-sky-500/25 transition-all duration-200 flex items-center justify-center gap-2 mt-2 disabled:opacity-60 active:scale-[0.98]"
+                        class="w-full py-3.5 px-4 rounded-xl text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 mt-2 disabled:opacity-60 active:scale-[0.98] cursor-pointer
+                            {$accentColor === 'yellow'
+                                ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black shadow-lg shadow-amber-500/30'
+                                : 'bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-400 hover:to-cyan-400 text-white shadow-lg shadow-sky-500/25'}"
                     >
                         {#if isLoading}
-                            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                            <span class="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
                             Memvalidasi...
                         {:else}
                             <span>Lanjut ke Verifikasi PIN</span>
@@ -361,13 +396,13 @@
                 <div class="mt-5 space-y-5 animate-fadeIn">
 
                     <div class="text-center">
-                        <div class="text-xs text-slate-400">
-                            Masukkan <span class="text-sky-400 font-bold">6 Digit PIN Keamanan</span> untuk akun <span class="text-white font-semibold">{username}</span>
+                        <div class="text-xs {$themeMode === 'light' ? 'text-slate-600' : 'text-slate-400'}">
+                            Masukkan <span class="font-bold {$accentColor === 'yellow' ? 'text-amber-500' : 'text-sky-400'}">6 Digit PIN Keamanan</span> untuk akun <span class="font-semibold {$themeMode === 'light' ? 'text-slate-900' : 'text-white'}">{username}</span>
                         </div>
                     </div>
 
                     <!-- 6 Digit Input Boxes -->
-                    <div class="flex justify-center gap-2 sm:gap-2.5" onpaste={handlePinPaste}>
+                    <div class="flex justify-center gap-1.5 sm:gap-2.5 max-w-full px-0.5" onpaste={handlePinPaste}>
                         {#each pinDigits as digit, idx}
                             <input
                                 bind:this={pinInputs[idx]}
@@ -377,18 +412,26 @@
                                 value={digit}
                                 oninput={(e) => handlePinInput(idx, e)}
                                 onkeydown={(e) => handlePinKeyDown(idx, e)}
-                                class="w-11 h-13 sm:w-12 sm:h-14 text-center text-xl sm:text-2xl font-bold font-mono bg-slate-950/90 border {digit ? 'border-sky-400 text-sky-400 ring-2 ring-sky-500/20' : 'border-slate-700/80 text-white'} rounded-xl focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-500/30 transition-all"
+                                class="w-9 h-12 sm:w-12 sm:h-14 text-center text-lg sm:text-2xl font-bold font-mono rounded-xl focus:outline-none focus:ring-2 transition-all
+                                    {$themeMode === 'light' ? 'bg-slate-100 text-slate-900' : 'bg-slate-950/90 text-white'}
+                                    {digit 
+                                        ? ($accentColor === 'yellow' ? 'border-2 border-amber-400 text-amber-500 ring-2 ring-amber-500/25' : 'border-2 border-sky-400 text-sky-400 ring-2 ring-sky-500/25') 
+                                        : ($themeMode === 'light' ? 'border border-slate-300' : 'border border-slate-700/80')}
+                                    {$accentColor === 'yellow' ? 'focus:border-amber-400 focus:ring-amber-500/30' : 'focus:border-sky-400 focus:ring-sky-500/30'}"
                             />
                         {/each}
                     </div>
 
                     <!-- Visual Keypad Option -->
-                    <div class="grid grid-cols-3 gap-2 max-w-[260px] mx-auto pt-2">
+                    <div class="grid grid-cols-3 gap-1.5 sm:gap-2 max-w-[260px] mx-auto pt-1 sm:pt-2">
                         {#each [1, 2, 3, 4, 5, 6, 7, 8, 9] as num}
                             <button
                                 type="button"
                                 onclick={() => handleKeypadClick(num)}
-                                class="h-11 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-white font-bold text-base transition-all active:scale-95 flex items-center justify-center shadow-sm"
+                                class="h-10 sm:h-11 rounded-xl font-bold text-base transition-all active:scale-95 flex items-center justify-center shadow-sm cursor-pointer
+                                    {$themeMode === 'light'
+                                        ? 'bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800'
+                                        : 'bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-white'}"
                             >
                                 {num}
                             </button>
@@ -396,7 +439,10 @@
                         <button
                             type="button"
                             onclick={backToStep1}
-                            class="h-11 rounded-xl bg-slate-900/40 hover:bg-slate-900 border border-slate-800/60 text-slate-400 hover:text-slate-200 text-xs font-semibold transition-all active:scale-95 flex items-center justify-center"
+                            class="h-10 sm:h-11 rounded-xl text-xs font-semibold transition-all active:scale-95 flex items-center justify-center cursor-pointer
+                                {$themeMode === 'light'
+                                    ? 'bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600'
+                                    : 'bg-slate-900/40 hover:bg-slate-900 border border-slate-800/60 text-slate-400 hover:text-slate-200'}"
                             title="Kembali ke Step 1"
                         >
                             ← Kembali
@@ -404,14 +450,17 @@
                         <button
                             type="button"
                             onclick={() => handleKeypadClick(0)}
-                            class="h-11 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-white font-bold text-base transition-all active:scale-95 flex items-center justify-center shadow-sm"
+                            class="h-10 sm:h-11 rounded-xl font-bold text-base transition-all active:scale-95 flex items-center justify-center shadow-sm cursor-pointer
+                                {$themeMode === 'light'
+                                    ? 'bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800'
+                                    : 'bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-white'}"
                         >
                             0
                         </button>
                         <button
                             type="button"
                             onclick={handleKeypadBackspace}
-                            class="h-11 rounded-xl bg-slate-900/40 hover:bg-rose-500/20 border border-slate-800/60 hover:border-rose-500/30 text-rose-400 text-sm font-bold transition-all active:scale-95 flex items-center justify-center"
+                            class="h-10 sm:h-11 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-sm font-bold transition-all active:scale-95 flex items-center justify-center cursor-pointer"
                             title="Hapus Digit"
                         >
                             ⌫
@@ -424,10 +473,13 @@
                             type="button"
                             onclick={handleStep2Submit}
                             disabled={isLoading || pinDigits.some(d => d === '')}
-                            class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white text-sm font-bold shadow-lg shadow-emerald-500/25 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98]"
+                            class="w-full py-3.5 px-4 rounded-xl text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] cursor-pointer
+                                {$accentColor === 'yellow'
+                                    ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black shadow-lg shadow-amber-500/30'
+                                    : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white shadow-lg shadow-emerald-500/25'}"
                         >
                             {#if isLoading}
-                                <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                                <span class="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
                                 Memverifikasi PIN...
                             {:else}
                                 <span>🔓 Verifikasi & Masuk</span>
@@ -437,7 +489,8 @@
                         <button
                             type="button"
                             onclick={backToStep1}
-                            class="w-full py-2 text-xs text-slate-400 hover:text-slate-200 transition-colors text-center font-medium"
+                            class="w-full py-2 text-xs transition-colors text-center font-medium cursor-pointer
+                                {$themeMode === 'light' ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-slate-200'}"
                         >
                             Ganti Akun / Ubah Password
                         </button>
@@ -447,7 +500,8 @@
             {/if}
 
             <!-- Footer Security Note -->
-            <div class="mt-6 pt-4 border-t border-slate-800/60 text-center text-[11px] text-slate-500 flex items-center justify-center gap-1.5">
+            <div class="mt-6 pt-4 border-t text-center text-[11px] flex items-center justify-center gap-1.5
+                {$themeMode === 'light' ? 'border-slate-100 text-slate-400' : 'border-slate-800/60 text-slate-500'}">
                 <span>🛡️</span>
                 <span>Dilindungi Autentikasi Ganda 2-Tahap</span>
             </div>
@@ -455,7 +509,7 @@
         </div>
 
         <!-- Footer Copyright -->
-        <div class="text-center mt-6 text-xs text-slate-600">
+        <div class="text-center mt-6 text-xs {$themeMode === 'light' ? 'text-slate-500' : 'text-slate-600'}">
             &copy; 2026 PT. Anugerah Rezeki Teknindo · All Rights Reserved
         </div>
 

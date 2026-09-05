@@ -52,6 +52,32 @@ export function addMonthsToDate(dateStr, months = 3) {
 }
 
 /**
+ * Tambah hari ke tanggal YYYY-MM-DD secara presisi
+ * @param {string} dateStr
+ * @param {number} days
+ * @returns {string}
+ */
+export function addDaysToDate(dateStr, days = 90) {
+    if (!dateStr) return getTodayLocal();
+    const parts = dateStr.split('T')[0].split('-');
+    if (parts.length === 3) {
+        const year = parseInt(parts[0]);
+        const month = parseInt(parts[1]) - 1;
+        const day = parseInt(parts[2]);
+        const dt = new Date(year, month, day + parseInt(days));
+        return formatLocalDate(dt);
+    }
+    const dt = new Date(dateStr);
+    dt.setDate(dt.getDate() + parseInt(days));
+    return formatLocalDate(dt);
+}
+
+export function calculateNextMaintenanceDate(dateStr, interval = 90) {
+    const num = parseInt(interval) || 90;
+    return addDaysToDate(dateStr, num);
+}
+
+/**
  * Hitung computed_status dan days_left dari tanggal next_maintenance
  * @param {object} rec - Row dari tabel tanks
  * @returns {object} rec dengan tambahan computed_status & days_left
@@ -83,9 +109,12 @@ export function computeStatus(rec) {
         const diffTime = nextDt.getTime() - today.getTime();
         daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
+        const intervalNum = parseInt(rec.interval_days || rec.interval_months) || 90;
+        const noticeThreshold = intervalNum <= 14 ? Math.max(1, Math.floor(intervalNum * 0.25)) : 10;
+
         if (daysLeft <= 0) {
             status = 'JATUH TEMPO';
-        } else if (daysLeft <= 30) {
+        } else if (daysLeft <= noticeThreshold) {
             status = 'NOTICE';
         } else {
             status = 'AMAN';
@@ -116,6 +145,7 @@ export function transformTank(row) {
         sheet:            row.sheet_name,
         region:           row.region,
         estate:           row.estate,
+        location_type:    row.location_type || 'Kebun',
         unit_name:        unitName,
         tank_capacity:    unitName,
         sisa_solar:       row.sisa_solar || '-',
@@ -124,7 +154,8 @@ export function transformTank(row) {
         install_date:     formatLocalDate(row.install_date),
         last_maintenance: formatLocalDate(row.last_maintenance),
         next_maintenance: formatLocalDate(row.next_maintenance),
-        interval_months:  row.interval_months || 3,
+        interval_months:  row.interval_months || 90,
+        interval_days:    row.interval_months || 90,
         pic_manager:      row.pic_manager,
         pic_gudang:       row.pic_gudang,
         phone_number:     row.phone_number,

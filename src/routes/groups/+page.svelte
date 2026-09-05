@@ -121,20 +121,20 @@
 <div class="space-y-8 animate-fadeIn">
 
     <!-- Page Header & Actions -->
-    <div class="flex flex-wrap justify-between items-center gap-4">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h2 class="text-xl font-bold text-white flex items-center gap-2.5">
-                <span class="w-8 h-8 rounded-lg bg-indigo-500/15 border border-indigo-500/25 flex items-center justify-center text-base">🏢</span>
+            <h2 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2.5">
+                <span class="w-8 h-8 rounded-lg bg-indigo-500/15 border border-indigo-500/25 flex items-center justify-center text-base shrink-0">🏢</span>
                 Kelola Group Perusahaan Konsumen
             </h2>
-            <p class="text-[13px] text-slate-500 mt-1.5 ml-[42px]">
+            <p class="text-xs sm:text-[13px] text-slate-500 mt-1.5 sm:ml-[42px]">
                 Daftar master Group / Holding Perusahaan, penambahan grup baru, dan monitoring unit tangki per group.
             </p>
         </div>
 
         <button
             onclick={openAddModal}
-            class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-500 hover:to-cyan-400 text-white text-xs font-bold shadow-lg shadow-sky-600/20 transition-all active:scale-95"
+            class="w-full sm:w-auto justify-center flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-500 hover:to-cyan-400 text-white text-xs font-bold shadow-lg shadow-sky-600/20 transition-all active:scale-95"
         >
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -342,7 +342,7 @@
                     />
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label for="new-pic-name" class="block text-xs font-semibold text-slate-400 mb-1.5">Nama PIC Group</label>
                         <input
@@ -436,7 +436,7 @@
                     />
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label for="edit-pic-name" class="block text-xs font-semibold text-slate-400 mb-1.5">Nama PIC</label>
                         <input

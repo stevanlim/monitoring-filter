@@ -29,10 +29,9 @@
         },
         {
             href: "/stock",
-            icon: "📦",
-            label: "Stok Filter",
+            icon: "🏷️",
+            label: "Kelola Filter",
             badge: null,
-            soon: true,
         },
     ];
 </script>

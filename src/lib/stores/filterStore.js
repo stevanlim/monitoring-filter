@@ -300,15 +300,17 @@ function createPhotoDirectoryStore() {
         addPhoto(photo) {
             update(state => {
                 const newTree = { ...state.tree };
-                const g = photo.group || 'Lainnya';
-                const r = photo.region || 'Umum';
-                const e = photo.estate || 'Unassigned';
+                const g  = photo.group         || 'Lainnya';
+                const r  = photo.region        || 'Umum';
+                const e  = photo.estate        || 'Unassigned';
+                const lt = photo.location_type || 'Kebun';
 
                 if (!newTree[g]) newTree[g] = {};
                 if (!newTree[g][r]) newTree[g][r] = {};
-                if (!newTree[g][r][e]) newTree[g][r][e] = [];
+                if (!newTree[g][r][e]) newTree[g][r][e] = {};
+                if (!newTree[g][r][e][lt]) newTree[g][r][e][lt] = [];
 
-                newTree[g][r][e].unshift(photo);
+                newTree[g][r][e][lt].unshift(photo);
                 return { tree: newTree, totalPhotos: state.totalPhotos + 1 };
             });
         },
@@ -529,12 +531,12 @@ function createFilterStockStore() {
 
 export const filterStockStore = createFilterStockStore();
 
-// Derived: hitung jumlah tipe filter yang menipis / habis
+// Derived: stok filter telah dinonaktifkan, selalu return 0
 export const stockAlertStore = derived(filterStockStore, $stock => ({
-    menipis: $stock.filter(s => s.quantity > 0 && s.quantity <= s.min_quantity).length,
-    habis:   $stock.filter(s => s.quantity === 0).length,
-    items_habis:   $stock.filter(s => s.quantity === 0),
-    items_menipis: $stock.filter(s => s.quantity > 0 && s.quantity <= s.min_quantity),
+    menipis: 0,
+    habis:   0,
+    items_habis:   [],
+    items_menipis: [],
 }));
 
 // ============================================================
@@ -545,15 +547,17 @@ function buildPhotoTree(photos) {
     let total = 0;
 
     photos.forEach(p => {
-        const g = p.group  || 'Lainnya';
-        const r = p.region || 'Umum';
-        const e = p.estate || 'Unassigned';
+        const g  = p.group         || 'Lainnya';
+        const r  = p.region        || 'Umum';
+        const e  = p.estate        || 'Unassigned';
+        const lt = p.location_type || 'Kebun';
 
         if (!tree[g]) tree[g] = {};
         if (!tree[g][r]) tree[g][r] = {};
-        if (!tree[g][r][e]) tree[g][r][e] = [];
+        if (!tree[g][r][e]) tree[g][r][e] = {};
+        if (!tree[g][r][e][lt]) tree[g][r][e][lt] = [];
 
-        tree[g][r][e].push(p);
+        tree[g][r][e][lt].push(p);
         total++;
     });
 
@@ -585,9 +589,12 @@ export function computeStatus(rec) {
         const diffTime = nextDt.getTime() - today.getTime();
         daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
+        const intervalNum = parseInt(rec.interval_days || rec.interval_months) || 90;
+        const noticeThreshold = intervalNum <= 14 ? Math.max(1, Math.floor(intervalNum * 0.25)) : 10;
+
         if (daysLeft <= 0) {
             status = 'JATUH TEMPO';
-        } else if (daysLeft <= 30) {
+        } else if (daysLeft <= noticeThreshold) {
             status = 'NOTICE';
         } else {
             status = 'AMAN';

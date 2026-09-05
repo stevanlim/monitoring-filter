@@ -6,10 +6,24 @@
         onOpenAddModal = () => {},
         isOpen = $bindable(true),
         currentUser = null,
+        isMobile = false
     } = $props();
 
     let isLoggingOut = $state(false);
     let showLogoutConfirm = $state(false);
+
+    function handleNavClick() {
+        if (isMobile) {
+            isOpen = false;
+        }
+    }
+
+    function handleAddFilter() {
+        if (isMobile) {
+            isOpen = false;
+        }
+        onOpenAddModal();
+    }
 
     async function handleLogout() {
         isLoggingOut = true;
@@ -34,7 +48,7 @@
             href: "/",
             icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-[18px] h-[18px]"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>`,
             label: "Notice Harian",
-            badge: () => $statsStore.notice + $statsStore.jatuh_tempo + $stockAlertStore.habis + $stockAlertStore.menipis,
+            badge: () => $statsStore.notice + $statsStore.jatuh_tempo,
         },
         {
             href: "/records",
@@ -50,9 +64,9 @@
         },
         {
             href: "/stock",
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-[18px] h-[18px]"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`,
-            label: "Kelola Data Filter",
-            badge: () => $stockAlertStore.habis > 0 ? $stockAlertStore.habis : ($stockAlertStore.menipis > 0 ? $stockAlertStore.menipis : null),
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-[18px] h-[18px]"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`,
+            label: "Kelola Tipe Filter",
+            badge: null,
         },
         {
             href: "/gallery",
@@ -74,12 +88,22 @@
     }
 </script>
 
+<!-- Mobile Backdrop Overlay -->
+{#if isMobile && isOpen}
+    <div
+        class="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm transition-opacity duration-300 animate-fadeIn"
+        onclick={() => (isOpen = false)}
+        aria-hidden="true"
+    ></div>
+{/if}
+
 <!-- Sidebar container -->
 <aside
-    class="fixed top-0 left-0 bottom-0 z-40 flex flex-col transition-all duration-300 ease-in-out border-r border-slate-800/80 select-none"
-    style="width: {isOpen
-        ? '240px'
-        : '64px'}; background: rgba(10, 15, 26, 0.96); backdrop-filter: blur(20px);"
+    class="fixed top-0 left-0 bottom-0 flex flex-col transition-all duration-300 ease-in-out border-r border-slate-800/80 select-none
+        {isMobile
+            ? (isOpen ? 'z-50 translate-x-0 shadow-2xl w-[270px] max-w-[85vw]' : 'z-50 -translate-x-full w-[270px]')
+            : 'z-40'}"
+    style="{!isMobile ? `width: ${isOpen ? '240px' : '64px'};` : ''} background: var(--bg-sidebar, rgba(10, 15, 26, 0.98)); backdrop-filter: blur(20px);"
 >
     <!-- Brand / Header -->
     <div
@@ -94,8 +118,8 @@
                 class="w-full h-full object-cover"
             />
         </div>
-        {#if isOpen}
-            <div class="overflow-hidden whitespace-nowrap animate-fadeIn">
+        {#if isOpen || isMobile}
+            <div class="overflow-hidden whitespace-nowrap animate-fadeIn flex-1">
                 <div
                     class="text-[12px] font-black text-white tracking-wide truncate leading-tight"
                 >
@@ -108,6 +132,18 @@
                 </div>
             </div>
         {/if}
+        {#if isMobile}
+            <button
+                type="button"
+                onclick={() => (isOpen = false)}
+                class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors ml-auto cursor-pointer"
+                aria-label="Tutup menu"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        {/if}
     </div>
 
     <!-- Navigation links -->
@@ -117,11 +153,12 @@
             {@const badgeCount = item.badge ? item.badge() : 0}
             <a
                 href={item.href}
+                onclick={handleNavClick}
                 class="relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 group
                     {active
                     ? 'bg-sky-500/10 text-sky-400 border border-sky-500/25 shadow-sm shadow-sky-500/10'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'}"
-                title={!isOpen ? item.label : ""}
+                title={!isOpen && !isMobile ? item.label : ""}
             >
                 <!-- Active bar left -->
                 {#if active}
@@ -138,7 +175,7 @@
                     {@html item.icon}
                 </span>
 
-                {#if isOpen}
+                {#if isOpen || isMobile}
                     <span class="truncate flex-1">{item.label}</span>
                     {#if badgeCount > 0}
                         <span
@@ -163,9 +200,9 @@
     <div class="border-t border-slate-800/60 p-3 space-y-2">
         <!-- Add filter installation button -->
         <button
-            onclick={onOpenAddModal}
-            class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-500 hover:to-cyan-400 text-white text-[12px] font-bold shadow-lg shadow-sky-600/20 transition-all active:scale-95"
-            title={!isOpen ? "Tambah Pemasangan Filter" : ""}
+            onclick={handleAddFilter}
+            class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-500 hover:to-cyan-400 text-white text-[12px] font-bold shadow-lg shadow-sky-600/20 transition-all active:scale-95 cursor-pointer"
+            title={!isOpen && !isMobile ? "Tambah Pemasangan Filter" : ""}
         >
             <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -181,15 +218,14 @@
                     d="M12 4v16m8-8H4"
                 />
             </svg>
-            {#if isOpen}<span class="truncate">Tambah Pemasangan Filter</span
-                >{/if}
+            {#if isOpen || isMobile}<span class="truncate">Tambah Pemasangan Filter</span>{/if}
         </button>
 
         <!-- Logout Button -->
         <button
             onclick={() => (showLogoutConfirm = true)}
-            class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all text-[11px] font-semibold"
-            title={!isOpen ? "Keluar (Logout)" : ""}
+            class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all text-[11px] font-semibold cursor-pointer"
+            title={!isOpen && !isMobile ? "Keluar (Logout)" : ""}
         >
             <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -205,36 +241,38 @@
                     d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                 />
             </svg>
-            {#if isOpen}<span class="truncate">Keluar (Logout)</span>{/if}
+            {#if isOpen || isMobile}<span class="truncate">Keluar (Logout)</span>{/if}
         </button>
 
-        <!-- Collapse toggle -->
-        <button
-            onclick={() => (isOpen = !isOpen)}
-            class="w-full flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-all text-[11px]"
-            title={isOpen ? "Collapse sidebar" : "Expand sidebar"}
-        >
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-4 h-4 transition-transform duration-300 {isOpen
-                    ? ''
-                    : 'rotate-180'}"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
+        <!-- Collapse toggle (Desktop only) -->
+        {#if !isMobile}
+            <button
+                onclick={() => (isOpen = !isOpen)}
+                class="w-full flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-all text-[11px] cursor-pointer"
+                title={isOpen ? "Collapse sidebar" : "Expand sidebar"}
             >
-                <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-                />
-            </svg>
-            {#if isOpen}<span>Sembunyikan</span>{/if}
-        </button>
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-4 h-4 transition-transform duration-300 {isOpen
+                        ? ''
+                        : 'rotate-180'}"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                    />
+                </svg>
+                {#if isOpen}<span>Sembunyikan</span>{/if}
+            </button>
+        {/if}
 
         <!-- Date -->
-        {#if isOpen}
+        {#if isOpen || isMobile}
             <div class="text-center text-[9px] text-slate-700 pt-0.5">
                 {dateStr}
             </div>

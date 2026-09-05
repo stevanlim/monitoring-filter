@@ -54,13 +54,14 @@
         if (searchTerm) {
             const s = searchTerm.toLowerCase();
             const match =
-                (r.estate       && r.estate.toLowerCase().includes(s))       ||
-                (r.group        && r.group.toLowerCase().includes(s))        ||
-                (r.region       && r.region.toLowerCase().includes(s))       ||
-                (r.pic_manager  && r.pic_manager.toLowerCase().includes(s))  ||
-                (r.pic_gudang   && r.pic_gudang.toLowerCase().includes(s))   ||
-                (r.phone_number && r.phone_number.includes(s))               ||
-                (r.equipment    && r.equipment.toLowerCase().includes(s));
+                (r.estate        && r.estate.toLowerCase().includes(s))        ||
+                (r.location_type && r.location_type.toLowerCase().includes(s)) ||
+                (r.group         && r.group.toLowerCase().includes(s))         ||
+                (r.region        && r.region.toLowerCase().includes(s))        ||
+                (r.pic_manager   && r.pic_manager.toLowerCase().includes(s))   ||
+                (r.pic_gudang    && r.pic_gudang.toLowerCase().includes(s))    ||
+                (r.phone_number  && r.phone_number.includes(s))                ||
+                (r.equipment     && r.equipment.toLowerCase().includes(s));
             if (!match) return false;
         }
         return true;
@@ -97,39 +98,40 @@
 <div class="space-y-6 animate-fadeIn">
 
     <!-- Page Header -->
-    <div class="flex flex-wrap justify-between items-center gap-4">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
-            <h2 class="text-xl font-bold text-white flex items-center gap-2.5">
-                <span class="w-8 h-8 rounded-lg bg-sky-500/15 border border-sky-500/25 flex items-center justify-center text-base">📋</span>
+            <h2 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2 sm:gap-2.5">
+                <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-sky-500/15 border border-sky-500/25 flex items-center justify-center text-sm sm:text-base shrink-0">📋</span>
                 Data Unit & Filter
             </h2>
-            <p class="text-[13px] text-slate-500 mt-1.5 ml-[42px]">
+            <p class="text-[12px] sm:text-[13px] text-slate-500 mt-1 sm:mt-1.5 sm:ml-[42px]">
                 Seluruh unit operasional dari Group Perusahaan Konsumen beserta riwayat pemasangan & maintenance.
             </p>
         </div>
 
-        <div class="flex items-center gap-3 flex-wrap">
+        <div class="flex items-center gap-2 sm:gap-3 flex-wrap w-full sm:w-auto justify-between sm:justify-start">
             <!-- Jumlah tampil -->
-            <div class="text-sm text-slate-500">
+            <div class="text-xs sm:text-sm text-slate-500">
                 Menampilkan
-                <span class="font-bold text-sky-400 text-base mx-1">{filteredRecords.length}</span>
+                <span class="font-bold text-sky-400 text-sm sm:text-base mx-1">{filteredRecords.length}</span>
                 {#if filteredRecords.length !== $recordsStore.length}
                     dari <span class="font-semibold text-white">{$recordsStore.length}</span>
                 {/if}
                 unit
             </div>
 
-            <!-- Export Excel -->
-            <button
-                id="btn-export-excel"
-                onclick={handleExportExcel}
-                disabled={isExportingExcel || filteredRecords.length === 0}
-                class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200
-                       bg-emerald-500/10 border border-emerald-500/30 text-emerald-400
-                       hover:bg-emerald-500/20 hover:border-emerald-400/50 hover:text-emerald-300
-                       disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
-                title="Export ke Excel (.xlsx) — {filteredRecords.length} unit"
-            >
+            <div class="flex items-center gap-2">
+                <!-- Export Excel -->
+                <button
+                    id="btn-export-excel"
+                    onclick={handleExportExcel}
+                    disabled={isExportingExcel || filteredRecords.length === 0}
+                    class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200
+                           bg-emerald-500/10 border border-emerald-500/30 text-emerald-400
+                           hover:bg-emerald-500/20 hover:border-emerald-400/50 hover:text-emerald-300
+                           disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 cursor-pointer"
+                    title="Export ke Excel (.xlsx) — {filteredRecords.length} unit"
+                >
                 {#if isExportingExcel}
                     <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
@@ -182,7 +184,7 @@
                 <input
                     type="text"
                     bind:value={searchTerm}
-                    placeholder="Cari kebun, wilayah, PIC, nomor HP..."
+                    placeholder="Cari PT/estate, lokasi, wilayah, PIC, nomor HP..."
                     class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/60 border border-slate-800 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500/60 transition-colors"
                 />
             </div>
@@ -213,7 +215,7 @@
                 class="py-2.5 px-3.5 rounded-xl bg-slate-900/60 border border-slate-800 text-sm text-slate-300 focus:outline-none focus:border-sky-500/60 transition-colors"
             >
                 <option value="ALL">📌 Semua Status</option>
-                <option value="NOTICE">⚠️ Notice (1–30 Hari)</option>
+                <option value="NOTICE">⚠️ Notice (1–10 Hari)</option>
                 <option value="JATUH TEMPO">🚨 Jatuh Tempo</option>
                 <option value="AMAN">✅ Status Aman</option>
                 <option value="NON-AKTIF">⚪ Non-Aktif</option>
@@ -236,18 +238,24 @@
         </div>
     {:else}
         <div class="rounded-2xl border border-slate-800/60 bg-[#0d1424] overflow-hidden shadow-2xl">
+            <!-- Mobile scroll hint -->
+            <div class="sm:hidden px-3 py-1.5 bg-slate-900/80 border-b border-slate-800 text-[10px] text-slate-400 flex items-center justify-between">
+                <span>👉 Geser tabel ke kanan untuk kolom lengkap</span>
+                <span class="text-xs">↔️</span>
+            </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="border-b border-slate-800/80" style="background: rgba(8,12,20,0.7);">
-                            <th class="py-3 px-4 text-[10px] font-bold uppercase tracking-widest text-slate-500 whitespace-nowrap">Status</th>
-                            <th class="py-3 px-4 text-[10px] font-bold uppercase tracking-widest text-slate-500 whitespace-nowrap">Kebun / Estate</th>
-                            <th class="py-3 px-4 text-[10px] font-bold uppercase tracking-widest text-slate-500 whitespace-nowrap">Wilayah</th>
-                            <th class="py-3 px-4 text-[10px] font-bold uppercase tracking-widest text-slate-500 whitespace-nowrap">Nama / Tipe Unit</th>
-                            <th class="py-3 px-4 text-[10px] font-bold uppercase tracking-widest text-slate-500 whitespace-nowrap">Equipment Filter</th>
-                            <th class="py-3 px-4 text-[10px] font-bold uppercase tracking-widest text-slate-500 whitespace-nowrap">Servis Berikutnya</th>
-                            <th class="py-3 px-4 text-[10px] font-bold uppercase tracking-widest text-slate-500 whitespace-nowrap">Kontak PIC</th>
-                            <th class="py-3 px-4 text-[10px] font-bold uppercase tracking-widest text-slate-500 whitespace-nowrap">Aksi</th>
+                            <th class="py-2.5 px-2.5 text-[9.5px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">Status</th>
+                            <th class="py-2.5 px-2.5 text-[9.5px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">PT / Estate</th>
+                            <th class="py-2.5 px-2 text-[9.5px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">Lokasi</th>
+                            <th class="py-2.5 px-2 text-[9.5px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">Wilayah</th>
+                            <th class="py-2.5 px-2.5 text-[9.5px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">Nama / Tipe Unit</th>
+                            <th class="py-2.5 px-2.5 text-[9.5px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">Equipment</th>
+                            <th class="py-2.5 px-2.5 text-[9.5px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">Servis Berikutnya</th>
+                            <th class="py-2.5 px-2.5 text-[9.5px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">Kontak PIC</th>
+                            <th class="py-2.5 px-2.5 text-[9.5px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -257,8 +265,8 @@
                             <tr class="border-b border-slate-800/40 hover:bg-slate-800/20 transition-colors">
 
                                 <!-- Status badge -->
-                                <td class="py-3 px-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg {cfg.bg} border {cfg.border} {cfg.color} text-[10px] font-bold uppercase tracking-wide whitespace-nowrap">
+                                <td class="py-2 px-2.5 whitespace-nowrap">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md {cfg.bg} border {cfg.border} {cfg.color} text-[9.5px] font-bold uppercase tracking-wide whitespace-nowrap">
                                         {#if r.computed_status === 'JATUH TEMPO'}
                                             🚨 Lewat {Math.abs(r.days_left)}h
                                         {:else if r.computed_status === 'NOTICE'}
@@ -272,58 +280,65 @@
                                 </td>
 
                                 <!-- Estate & Group (Clickable to open Detail Modal) -->
-                                <td class="py-3 px-4">
+                                <td class="py-2 px-2.5">
                                     <button
                                         onclick={() => openDetailModal(r.id)}
                                         class="text-left group/estate flex flex-col hover:opacity-90"
                                     >
-                                        <div class="text-[13px] font-bold text-white group-hover/estate:text-sky-400 transition-colors leading-tight flex items-center gap-1.5">
+                                        <div class="text-[12.5px] font-bold text-white group-hover/estate:text-sky-400 transition-colors leading-tight flex items-center gap-1">
                                             <span>{r.estate}</span>
-                                            <span class="text-[10px] opacity-0 group-hover/estate:opacity-100 text-sky-400">🔍</span>
+                                            <span class="text-[9px] opacity-0 group-hover/estate:opacity-100 text-sky-400">🔍</span>
                                         </div>
-                                        <div class="text-[11px] text-slate-500 mt-0.5">{r.group}</div>
+                                        <div class="text-[10px] text-slate-500 mt-0.5">{r.group}</div>
                                     </button>
                                 </td>
 
+                                <!-- Lokasi / Tipe (Kebun, Pabrikan, PKS, dll) -->
+                                <td class="py-2 px-2 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-800/80 border border-slate-700/60 text-[10.5px] text-sky-300 font-medium">
+                                        {r.location_type || 'Kebun'}
+                                    </span>
+                                </td>
+
                                 <!-- Region -->
-                                <td class="py-3 px-4 text-[13px] text-slate-400 whitespace-nowrap">
+                                <td class="py-2 px-2 text-[11.5px] text-slate-400 whitespace-nowrap">
                                     {r.region || '—'}
                                 </td>
 
                                 <!-- Unit Name / Type -->
-                                <td class="py-3 px-4 whitespace-nowrap">
-                                    <div class="text-[13px] text-slate-300 font-medium">{r.unit_name || r.tank_capacity || 'Tangki Timbun Solar'}</div>
+                                <td class="py-2 px-2.5 whitespace-nowrap">
+                                    <div class="text-[12px] text-slate-300 font-medium">{r.unit_name || r.tank_capacity || 'Tangki Timbun Solar'}</div>
                                     {#if r.sisa_solar && r.sisa_solar !== '-'}
-                                        <div class="text-[10px] text-cyan-400 mt-0.5">Sisa: {r.sisa_solar}</div>
+                                        <div class="text-[9.5px] text-cyan-400 mt-0.5">Sisa: {r.sisa_solar}</div>
                                     {/if}
                                 </td>
 
                                 <!-- Equipment -->
-                                <td class="py-3 px-4">
-                                    <div class="text-[13px] font-semibold text-sky-400 whitespace-nowrap">{r.equipment}</div>
+                                <td class="py-2 px-2.5">
+                                    <div class="text-[12px] font-semibold text-sky-400 whitespace-nowrap">{r.equipment}</div>
                                 </td>
 
                                 <!-- Next maintenance -->
-                                <td class="py-3 px-4 whitespace-nowrap">
-                                    <div class="text-[13px] font-bold text-white">{r.next_maintenance || '—'}</div>
-                                    <div class="text-[10px] text-slate-600 mt-0.5">Install: {r.install_date || r.last_maintenance || '—'}</div>
+                                <td class="py-2 px-2.5 whitespace-nowrap">
+                                    <div class="text-[12px] font-bold text-white">{r.next_maintenance || '—'}</div>
+                                    <div class="text-[9.5px] text-slate-500 mt-0.5">Install: {r.install_date || r.last_maintenance || '—'}</div>
                                 </td>
 
                                 <!-- PIC -->
-                                <td class="py-3 px-4">
-                                    <div class="text-[13px] text-slate-300 font-medium">{picInfo.name}</div>
+                                <td class="py-2 px-2.5">
+                                    <div class="text-[12px] text-slate-300 font-medium whitespace-nowrap">{picInfo.name}</div>
                                     {#if picInfo.hasPhone}
-                                        <div class="text-[11px] text-emerald-400 font-mono mt-0.5">📱 {picInfo.rawPhone || '+' + picInfo.phone}</div>
+                                        <div class="text-[10px] text-emerald-400 font-mono mt-0.5 whitespace-nowrap">📱 {picInfo.rawPhone || '+' + picInfo.phone}</div>
                                     {/if}
                                 </td>
 
                                 <!-- Actions -->
-                                <td class="py-3 px-4">
-                                    <div class="flex items-center gap-1.5">
+                                <td class="py-2 px-2.5">
+                                    <div class="flex items-center justify-center gap-1">
                                         <!-- Detail Button -->
                                         <button
                                             onclick={() => openDetailModal(r.id)}
-                                            class="px-2.5 py-1.5 rounded-lg bg-indigo-600/50 hover:bg-indigo-600 border border-indigo-500/30 text-indigo-200 hover:text-white font-bold text-[11px] transition-all whitespace-nowrap"
+                                            class="px-2 py-1 rounded-md bg-indigo-600/50 hover:bg-indigo-600 border border-indigo-500/30 text-indigo-200 hover:text-white font-semibold text-[10.5px] transition-all whitespace-nowrap"
                                             title="Lihat riwayat kronologis & foto detail"
                                         >
                                             🔍 Detail
@@ -334,10 +349,10 @@
                                             href={buildWhatsAppUrl(r)}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            class="px-2.5 py-1.5 rounded-lg {picInfo.hasPhone ? 'bg-emerald-600/80 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-600/20' : 'bg-slate-800 text-slate-400 hover:text-white'} border border-emerald-500/30 font-bold text-[11px] transition-all whitespace-nowrap flex items-center gap-1"
+                                            class="px-2 py-1 rounded-md {picInfo.hasPhone ? 'bg-emerald-600/80 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-600/20' : 'bg-slate-800 text-slate-400 hover:text-white'} border border-emerald-500/30 font-semibold text-[10.5px] transition-all whitespace-nowrap flex items-center gap-1"
                                             title={picInfo.hasPhone ? `Kirim WhatsApp ke ${picInfo.name} (${picInfo.phone})` : 'Kirim WhatsApp'}
                                         >
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-2.5 h-2.5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
                                                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                                             </svg>
                                             WA
@@ -345,7 +360,7 @@
                                         {#if r.computed_status === 'NON-AKTIF'}
                                             <button
                                                 onclick={() => openDetailModal(r.id)}
-                                                class="px-2.5 py-1.5 rounded-lg bg-emerald-600/30 hover:bg-emerald-600 border border-emerald-500/40 text-emerald-200 hover:text-white font-bold text-[11px] transition-all whitespace-nowrap flex items-center gap-1"
+                                                class="px-2 py-1 rounded-md bg-emerald-600/30 hover:bg-emerald-600 border border-emerald-500/40 text-emerald-200 hover:text-white font-semibold text-[10.5px] transition-all whitespace-nowrap flex items-center gap-1"
                                                 title="Aktifkan kembali unit tangki (perlu PIN)"
                                             >
                                                 ⚡ Aktifkan
@@ -353,7 +368,7 @@
                                         {:else}
                                             <button
                                                 onclick={() => openServiceModal(r)}
-                                                class="px-2.5 py-1.5 rounded-lg bg-sky-600/60 hover:bg-sky-600 border border-sky-500/30 text-white font-bold text-[11px] transition-all whitespace-nowrap"
+                                                class="px-2 py-1 rounded-md bg-sky-600/60 hover:bg-sky-600 border border-sky-500/30 text-white font-semibold text-[10.5px] transition-all whitespace-nowrap"
                                             >
                                                 🛠️ Servis
                                             </button>
@@ -366,7 +381,7 @@
                                                     recordsStore.deleteTank(r.id);
                                                 }
                                             }}
-                                            class="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-all text-xs"
+                                            class="p-1 rounded-md bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-all text-xs"
                                             title="Hapus unit tangki"
                                         >
                                             🗑️

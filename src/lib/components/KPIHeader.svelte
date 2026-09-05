@@ -26,7 +26,7 @@
         },
         {
             label:    'Notice — Hubungi Konsumen',
-            sublabel: 'Jatuh tempo 1–30 hari lagi',
+            sublabel: 'Jatuh tempo 1–10 hari lagi',
             value:    $statsStore.notice,
             icon:     '⚠️',
             color:    'amber',
@@ -49,7 +49,7 @@
     ]);
 </script>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
     {#each kpis as kpi}
         <div class="relative rounded-2xl overflow-hidden border {kpi.border} bg-[#0d1424] hover:bg-[#0f1929] transition-all duration-300 group cursor-default">
             <!-- Top accent bar -->
@@ -58,19 +58,19 @@
             <!-- Subtle glow blob -->
             <div class="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-gradient-to-br {kpi.gradient} opacity-5 group-hover:opacity-10 transition-opacity blur-2xl"></div>
 
-            <div class="p-5 relative">
-                <div class="flex items-start justify-between mb-4">
-                    <div>
-                        <p class="text-[11px] font-semibold uppercase tracking-widest text-slate-500 leading-none mb-1">{kpi.label}</p>
-                        <p class="text-[10px] text-slate-600">{kpi.sublabel}</p>
+            <div class="p-4 sm:p-5 relative">
+                <div class="flex items-start justify-between mb-3 sm:mb-4">
+                    <div class="pr-2">
+                        <p class="text-[11px] font-semibold uppercase tracking-wider sm:tracking-widest text-slate-400 sm:text-slate-500 leading-tight mb-1">{kpi.label}</p>
+                        <p class="text-[10px] text-slate-500 sm:text-slate-600">{kpi.sublabel}</p>
                     </div>
-                    <div class="w-10 h-10 rounded-xl {kpi.bg} border {kpi.border} flex items-center justify-center text-lg shrink-0">
+                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl {kpi.bg} border {kpi.border} flex items-center justify-center text-base sm:text-lg shrink-0">
                         {kpi.icon}
                     </div>
                 </div>
 
                 <div class="flex items-end gap-2">
-                    <span class="text-4xl font-black {kpi.value > 0 && kpi.color !== 'sky' && kpi.color !== 'emerald' ? kpi.text : 'text-white'} tracking-tight leading-none">
+                    <span class="text-3xl sm:text-4xl font-black {kpi.value > 0 && kpi.color !== 'sky' && kpi.color !== 'emerald' ? kpi.text : 'text-white'} tracking-tight leading-none">
                         {kpi.value}
                     </span>
                     <span class="text-xs text-slate-500 mb-1">unit</span>

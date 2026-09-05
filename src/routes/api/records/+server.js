@@ -4,7 +4,7 @@
  */
 import { json } from '@sveltejs/kit';
 import { query, insert } from '$lib/server/db.js';
-import { transformTank, formatLocalDate, getTodayLocal, addMonthsToDate } from '$lib/server/statusHelper.js';
+import { transformTank, formatLocalDate, getTodayLocal, calculateNextMaintenanceDate } from '$lib/server/statusHelper.js';
 
 // Auto-migrate format lama ke nama unit standar
 async function autoMigrateUnitNames() {
@@ -40,9 +40,9 @@ export async function GET({ url }) {
             params.push(groupFilter);
         }
         if (search) {
-            sql += ` AND (estate LIKE ? OR region LIKE ? OR pic_manager LIKE ? OR phone_number LIKE ? OR equipment LIKE ? OR tank_capacity LIKE ?)`;
+            sql += ` AND (estate LIKE ? OR location_type LIKE ? OR region LIKE ? OR pic_manager LIKE ? OR phone_number LIKE ? OR equipment LIKE ? OR tank_capacity LIKE ?)`;
             const s = `%${search}%`;
-            params.push(s, s, s, s, s, s);
+            params.push(s, s, s, s, s, s, s);
         }
 
         sql += ` ORDER BY group_name, estate`;
@@ -68,10 +68,10 @@ export async function POST({ request }) {
 
         const installDateStr = formatLocalDate(body.install_date) || getTodayLocal();
         const lastDateStr = formatLocalDate(body.last_maintenance) || installDateStr;
-        const intervalMonths = parseInt(body.interval_months) || 3;
+        const intervalMonths = parseInt(body.interval_days || body.interval_months) || 90;
 
-        // Hitung target next_maintenance secara aman
-        const nextDateStr = addMonthsToDate(lastDateStr, intervalMonths);
+        // Hitung target next_maintenance secara aman & presisi
+        const nextDateStr = calculateNextMaintenanceDate(lastDateStr, intervalMonths);
 
         // Nama / Tipe Unit yang diketik user
         const unitName = (body.unit_name || body.tank_capacity || 'Tangki Timbun Solar').trim();
@@ -82,6 +82,7 @@ export async function POST({ request }) {
             sheet_name:       body.sheet          || 'Manual Input',
             region:           body.region         || 'Umum',
             estate:           body.estate         || '',
+            location_type:    body.location_type  || 'Kebun',
             tank_capacity:    unitName,
             sisa_solar:       body.sisa_solar     || '-',
             equipment:        body.equipment      || 'MicroClean Filter MDF250 / FEC250',
