@@ -636,13 +636,21 @@
                                                     "Tangki Timbun Solar"}</span
                                             >
                                         </div>
-                                        <div class="flex justify-between">
+                                        <div class="flex justify-between border-b border-slate-800/60 pb-1.5">
                                             <span class="text-slate-500"
                                                 >Model Filter:</span
                                             >
                                             <span class="font-bold text-sky-400"
                                                 >{detail.equipment}</span
                                             >
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-slate-500"
+                                                >Hose Reel:</span
+                                            >
+                                            <span class="font-bold inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] {detail.hose_reel === 'Ada' ? 'bg-cyan-500/15 border border-cyan-500/30 text-cyan-300' : 'bg-slate-800 border border-slate-700/60 text-slate-400'}">
+                                                <span>{detail.hose_reel === 'Ada' ? '🌀 Ada' : '✕ Tidak Ada'}</span>
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -931,7 +939,7 @@
                         <span>Konfirmasi PIN (6 Digit) *</span>
                     </div>
                     <p class="text-[10px] text-slate-400 leading-tight">
-                        Masukkan PIN keamanan (contoh: 789000) untuk
+                        Masukkan 6-digit PIN keamanan Anda untuk
                         mengembalikan unit ke status aktif.
                     </p>
                     <input

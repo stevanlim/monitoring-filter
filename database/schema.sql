@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS `tanks` (
     `tank_capacity`     VARCHAR(100)  NOT NULL DEFAULT 'Tangki Timbun Solar' COMMENT 'Nama / Tipe Unit (Tangki Timbun, Genset, Fuel Truck, dll)',
     `sisa_solar`        VARCHAR(50)   NOT NULL DEFAULT '-',
     `equipment`         VARCHAR(200)  NOT NULL DEFAULT '' COMMENT 'Filter MDF250 / FEC250, dll',
+    `hose_reel`         VARCHAR(20)   NOT NULL DEFAULT 'Tidak' COMMENT 'Ketersediaan Hose Reel: Ada / Tidak',
     `status_mc`         VARCHAR(100)  NOT NULL DEFAULT 'AKTIF',
     `install_date`      DATE              NULL,
     `last_maintenance`  DATE              NULL,

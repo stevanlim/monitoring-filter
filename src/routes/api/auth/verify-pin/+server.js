@@ -20,11 +20,8 @@ export async function POST({ request }) {
         // Cek PIN di tabel users
         const rows = await query('SELECT id, username, name FROM users WHERE pin_hash = ?', [pinHash]);
 
-        // Cek fallback PIN default 789000
-        const isDefaultPin = pin === '789000';
-
-        if (rows.length === 0 && !isDefaultPin) {
-            return json({ valid: false, error: 'PIN Keamanan salah! Otorisasi perubahan stok ditolak.' }, { status: 401 });
+        if (rows.length === 0) {
+            return json({ valid: false, error: 'PIN Keamanan salah! Otorisasi ditolak.' }, { status: 401 });
         }
 
         return json({

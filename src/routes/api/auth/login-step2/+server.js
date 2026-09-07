@@ -39,13 +39,14 @@ export async function POST({ request, cookies }) {
         const user = rows[0];
         const { token, expiresAt } = await createSession(user.id);
 
-        // Pasang HttpOnly cookie
+        // Pasang HttpOnly cookie (masa aktif 1 jam)
         cookies.set('auth_session', token, {
             path: '/',
             httpOnly: true,
             sameSite: 'lax',
             secure: false, // True jika https
-            expires: expiresAt
+            expires: expiresAt,
+            maxAge: 60 * 60 // 1 jam (3600 detik)
         });
 
         return json({

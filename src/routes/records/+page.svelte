@@ -12,9 +12,10 @@
     // Build filter label for file names / export headers
     function buildFilterLabel() {
         const parts = [];
-        if (selectedGroup  !== 'ALL') parts.push(selectedGroup);
-        if (selectedStatus !== 'ALL') parts.push(selectedStatus);
-        if (searchTerm.trim())        parts.push(`"${searchTerm.trim()}"`);
+        if (selectedGroup    !== 'ALL') parts.push(selectedGroup);
+        if (selectedStatus   !== 'ALL') parts.push(selectedStatus);
+        if (selectedHoseReel !== 'ALL') parts.push(`Hose Reel: ${selectedHoseReel}`);
+        if (searchTerm.trim())          parts.push(`"${searchTerm.trim()}"`);
         return parts.join(' · ');
     }
 
@@ -38,9 +39,10 @@
         }
     }
 
-    let searchTerm     = $state('');
-    let selectedGroup  = $state(page.url.searchParams.get('group') || 'ALL');
-    let selectedStatus = $state('ALL');
+    let searchTerm       = $state('');
+    let selectedGroup    = $state(page.url.searchParams.get('group') || 'ALL');
+    let selectedStatus   = $state('ALL');
+    let selectedHoseReel = $state('ALL');
 
     let selectedRecordForService = $state(null);
     let isServiceModalOpen       = $state(false);
@@ -49,8 +51,13 @@
     let isDetailModalOpen        = $state(false);
 
     let filteredRecords = $derived($recordsStore.filter(r => {
-        if (selectedGroup  !== 'ALL' && r.group            !== selectedGroup)  return false;
-        if (selectedStatus !== 'ALL' && r.computed_status  !== selectedStatus) return false;
+        if (selectedGroup    !== 'ALL' && r.group           !== selectedGroup)  return false;
+        if (selectedStatus   !== 'ALL' && r.computed_status !== selectedStatus) return false;
+        if (selectedHoseReel !== 'ALL') {
+            const hasReel = (r.hose_reel === 'Ada');
+            if (selectedHoseReel === 'Ada' && !hasReel) return false;
+            if (selectedHoseReel === 'Tidak' && hasReel) return false;
+        }
         if (searchTerm) {
             const s = searchTerm.toLowerCase();
             const match =
@@ -61,6 +68,7 @@
                 (r.pic_manager   && r.pic_manager.toLowerCase().includes(s))   ||
                 (r.pic_gudang    && r.pic_gudang.toLowerCase().includes(s))    ||
                 (r.phone_number  && r.phone_number.includes(s))                ||
+                (r.hose_reel     && r.hose_reel.toLowerCase().includes(s))     ||
                 (r.equipment     && r.equipment.toLowerCase().includes(s));
             if (!match) return false;
         }
@@ -176,7 +184,7 @@
 
     <!-- Filter Controls -->
     <div class="rounded-2xl border border-slate-800/60 bg-[#0d1424] p-4">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <!-- Search -->
             <div class="relative">
                 <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -221,6 +229,16 @@
                 <option value="AMAN">✅ Status Aman</option>
                 <option value="NON-AKTIF">⚪ Non-Aktif</option>
             </select>
+
+            <!-- Hose Reel filter -->
+            <select
+                bind:value={selectedHoseReel}
+                class="py-2.5 px-3.5 rounded-xl bg-slate-900/60 border border-slate-800 text-sm text-slate-300 focus:outline-none focus:border-sky-500/60 transition-colors"
+            >
+                <option value="ALL">🌀 Semua Hose Reel</option>
+                <option value="Ada">✅ Ada Hose Reel</option>
+                <option value="Tidak">❌ Tidak Ada Hose Reel</option>
+            </select>
         </div>
     </div>
 
@@ -254,6 +272,7 @@
                             <th class="py-2.5 px-2 text-[9.5px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">Wilayah</th>
                             <th class="py-2.5 px-2.5 text-[9.5px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">Nama / Tipe Unit</th>
                             <th class="py-2.5 px-2.5 text-[9.5px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">Equipment</th>
+                            <th class="py-2.5 px-2 text-[9.5px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap text-center">Hose Reel</th>
                             <th class="py-2.5 px-2.5 text-[9.5px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">Servis Berikutnya</th>
                             <th class="py-2.5 px-2.5 text-[9.5px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">Kontak PIC</th>
                             <th class="py-2.5 px-2.5 text-[9.5px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap text-center">Aksi</th>
@@ -317,6 +336,19 @@
                                 <!-- Equipment -->
                                 <td class="py-2 px-2.5">
                                     <div class="text-[12px] font-semibold text-sky-400 whitespace-nowrap">{r.equipment}</div>
+                                </td>
+
+                                <!-- Hose Reel -->
+                                <td class="py-2 px-2 text-center whitespace-nowrap">
+                                    {#if r.hose_reel === 'Ada'}
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-[10px] font-bold">
+                                            <span class="text-xs">🌀</span> Ada
+                                        </span>
+                                    {:else}
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-slate-800/80 border border-slate-700/50 text-slate-400 text-[10px] font-medium">
+                                            <span class="text-slate-500 text-xs">✕</span> Tidak
+                                        </span>
+                                    {/if}
                                 </td>
 
                                 <!-- Next maintenance -->

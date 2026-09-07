@@ -111,12 +111,26 @@ export async function PATCH({ params, request }) {
             technician = 'Teknisi Lapangan',
             status_mc = null,
             equipment = null,
+            hose_reel = null,
             photo_id = null
         } = body;
 
-        // Jika hanya update status (misal menonaktifkan unit)
-        if (status_mc && !service_date) {
-            await query('UPDATE tanks SET status_mc = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [status_mc, id]);
+        // Jika hanya update status atau hose_reel (tanpa input servis)
+        if ((status_mc || hose_reel !== null) && !service_date) {
+            const updates = [];
+            const paramsList = [];
+            if (status_mc) {
+                updates.push('status_mc = ?');
+                paramsList.push(status_mc);
+            }
+            if (hose_reel !== null) {
+                updates.push('hose_reel = ?');
+                paramsList.push(hose_reel === 'Ada' ? 'Ada' : 'Tidak');
+            }
+            updates.push('updated_at = CURRENT_TIMESTAMP');
+            paramsList.push(id);
+
+            await query(`UPDATE tanks SET ${updates.join(', ')} WHERE id = ?`, paramsList);
             const updatedRows = await query('SELECT * FROM tanks WHERE id = ?', [id]);
             return json({ success: true, record: transformTank(updatedRows[0]) });
         }
@@ -129,17 +143,18 @@ export async function PATCH({ params, request }) {
         const intervalVal = parseInt(body.interval_days || interval_months) || 90;
         const nextDateStr = calculateNextMaintenanceDate(svcDateStr, intervalVal);
 
-        // 1. Update tabel tanks (termasuk tipe filter / equipment baru jika ada perubahan)
+        // 1. Update tabel tanks (termasuk tipe filter / equipment baru dan hose_reel jika ada perubahan)
         await query(
             `UPDATE tanks
              SET equipment        = COALESCE(?, equipment),
+                 hose_reel        = COALESCE(?, hose_reel),
                  last_maintenance = ?,
                  next_maintenance = ?,
                  interval_months  = ?,
                  status_mc        = 'AKTIF',
                  updated_at       = CURRENT_TIMESTAMP
              WHERE id = ?`,
-            [equipment || null, svcDateStr, nextDateStr, intervalVal, id]
+            [equipment || null, hose_reel || null, svcDateStr, nextDateStr, intervalVal, id]
         );
 
         // 2. Insert ke maintenance_history

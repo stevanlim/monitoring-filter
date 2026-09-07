@@ -189,8 +189,8 @@ export async function POST({ request }) {
                     }
                 }
                 const numMaintCols = Math.max(1, maxSlots);
-                // totalCols = No + Estate + Lokasi + Unit + TipeFilter + JmlUnitMC + Pemasangan + numMaint + StatusMC + KontakPIC + Note
-                const totalCols = 10 + numMaintCols;
+                // totalCols = No + Estate + Lokasi + Unit + TipeFilter + JmlUnitMC + Pemasangan + numMaint + StatusMC + KontakPIC + Note + HoseReel
+                const totalCols = 11 + numMaintCols;
 
                 // Buat nama sheet max 31 char
                 let sheetTitle = `${grpName} ${islandName}`.replace(/[*?:/\\\[\]]/g, '').trim();
@@ -198,7 +198,7 @@ export async function POST({ request }) {
                 const ws = workbook.addWorksheet(sheetTitle);
 
                 // Set column widths
-                // Col: 1=No, 2=Estate, 3=Lokasi, 4=Unit, 5=TipeFilter, 6=JmlUnitMC, 7=Pemasangan, 7+N=StatusMC, 8+N=KontakPIC, 9+N=Note
+                // Col: 1=No, 2=Estate, 3=Lokasi, 4=Unit, 5=TipeFilter, 6=JmlUnitMC, 7=Pemasangan, 7+N=StatusMC, 8+N=KontakPIC, 9+N=Note, 10+N=HoseReel
                 const colsConfig = [
                     { key: 'no', width: 6 },
                     { key: 'estate', width: 26 },
@@ -214,6 +214,7 @@ export async function POST({ request }) {
                 colsConfig.push({ key: 'status_mc', width: 12 });
                 colsConfig.push({ key: 'pic', width: 34 });
                 colsConfig.push({ key: 'note', width: 30 });
+                colsConfig.push({ key: 'hose_reel', width: 14 });
 
                 ws.columns = colsConfig;
 
@@ -238,7 +239,7 @@ export async function POST({ request }) {
 
                 // Baris 6 & 7: Header Tabel 2 Baris
                 // Col mapping (1-indexed):
-                // 1=No, 2=Estate, 3=Lokasi, 4=Unit, 5=TipeFilter, 6=JmlUnitMC, 7=Pemasangan, 8..7+N=Maint, 8+N=StatusMC, 9+N=KontakPIC, 10+N=Note
+                // 1=No, 2=Estate, 3=Lokasi, 4=Unit, 5=TipeFilter, 6=JmlUnitMC, 7=Pemasangan, 8..7+N=Maint, 8+N=StatusMC, 9+N=KontakPIC, 10+N=Note, 11+N=HoseReel
                 const hRow1Values = [
                     'No',
                     'Nama PT / Estate',
@@ -255,6 +256,7 @@ export async function POST({ request }) {
                 hRow1Values.push('Status MC');
                 hRow1Values.push('Kontak PIC');
                 hRow1Values.push('Note');
+                hRow1Values.push('Hose Reel');
 
                 const headerRow1 = ws.addRow(hRow1Values);
                 headerRow1.height = 26;
@@ -266,7 +268,7 @@ export async function POST({ request }) {
                 for (let i = 0; i < numMaintCols; i++) {
                     hRow2Values.push(getMaintColName(i));
                 }
-                hRow2Values.push('', '', '');
+                hRow2Values.push('', '', '', '');
 
                 const headerRow2 = ws.addRow(hRow2Values);
                 headerRow2.height = 28;
@@ -282,6 +284,7 @@ export async function POST({ request }) {
                 ws.mergeCells(6, 8 + numMaintCols, 7, 8 + numMaintCols); // Status MC
                 ws.mergeCells(6, 9 + numMaintCols, 7, 9 + numMaintCols); // Kontak PIC
                 ws.mergeCells(6, 10 + numMaintCols, 7, 10 + numMaintCols); // Note
+                ws.mergeCells(6, 11 + numMaintCols, 7, 11 + numMaintCols); // Hose Reel
 
                 // Style Baris Header (Kuning, Bold, Center, Border)
                 for (let r = 6; r <= 7; r++) {
@@ -388,6 +391,7 @@ export async function POST({ request }) {
                         rowValues.push(statusMc);
                         rowValues.push(picText);
                         rowValues.push(tank.notes || '');
+                        rowValues.push(tank.hose_reel === 'Ada' ? 'Ada' : 'Tidak');
 
                         const dataRow = ws.addRow(rowValues);
                         // Hitung tinggi baris secara dinamis berdasarkan jumlah baris teks (\n)
@@ -401,15 +405,15 @@ export async function POST({ request }) {
                         dataRow.height = maxLines > 1 ? (maxLines * 18 + 6) : 22;
 
                         // Styling setiap cell data
-                        // Col layout: 1=No, 2=Estate, 3=Lokasi, 4=Unit, 5=TipeFilter, 6=JmlUnitMC, 7=Pemasangan, 8..7+N=Maint, 8+N=Status, 9+N=KontakPIC, 10+N=Note
+                        // Col layout: 1=No, 2=Estate, 3=Lokasi, 4=Unit, 5=TipeFilter, 6=JmlUnitMC, 7=Pemasangan, 8..7+N=Maint, 8+N=Status, 9+N=KontakPIC, 10+N=Note, 11+N=HoseReel
                         for (let c = 1; c <= totalCols; c++) {
                             const cell = dataRow.getCell(c);
                             cell.border = borderThin;
                             cell.font = { name: 'Arial', size: 9.5, color: { argb: 'FF000000' } };
                             cell.alignment = { vertical: 'middle' };
 
-                            // Align center: No(1), Unit(4), JmlUnitMC(6), Pemasangan(7), Maint cols(8..7+N), Status(8+N)
-                            if (c === 1 || c === 4 || c === 6 || (c >= 7 && c <= 8 + numMaintCols)) {
+                            // Align center: No(1), Unit(4), JmlUnitMC(6), Pemasangan(7), Maint cols(8..7+N), Status(8+N), HoseReel(11+N)
+                            if (c === 1 || c === 4 || c === 6 || (c >= 7 && c <= 8 + numMaintCols) || c === 11 + numMaintCols) {
                                 cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
                             } else {
                                 // Estate(2), Lokasi(3), TipeFilter(5), KontakPIC(9+N), Note(10+N) -> left aligned
@@ -427,6 +431,17 @@ export async function POST({ request }) {
                                         color: { argb: slots[slotIdx].color }
                                     };
                                 }
+                            }
+
+                            // Styling khusus untuk Hose Reel (col 11+N)
+                            if (c === 11 + numMaintCols) {
+                                const isAda = tank.hose_reel === 'Ada';
+                                cell.font = {
+                                    name: 'Arial',
+                                    size: 9.5,
+                                    bold: isAda,
+                                    color: { argb: isAda ? 'FF0070C0' : 'FF555555' }
+                                };
                             }
                         }
                     }

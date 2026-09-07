@@ -25,8 +25,8 @@ export function generateToken() {
 }
 
 /**
- * Inisialisasi tabel `users` dan `sessions` jika belum ada,
- * serta auto-seed akun admin jika belum terdaftar.
+ * Inisialisasi tabel `users` dan `sessions` jika belum ada.
+ * Tidak ada kredensial hardcoded; pendaftaran akun pertama dilakukan oleh konsumen.
  */
 export async function ensureAuthSchemaAndSeed() {
     try {
@@ -57,35 +57,25 @@ export async function ensureAuthSchemaAndSeed() {
                 INDEX \`idx_user_id\` (\`user_id\`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         `);
-
-        // 3. Cek apakah user default sudah ada
-        const defaultUsername = 'admin_microcleaner';
-        const defaultPassword = 'teknindojaya123';
-        const defaultPin      = '789000';
-
-        const existingUsers = await query('SELECT id FROM users WHERE username = ?', [defaultUsername]);
-
-        const passHash = hashSecret(defaultPassword);
-        const pinHash  = hashSecret(defaultPin);
-
-        if (existingUsers.length === 0) {
-            await insert('users', {
-                username:      defaultUsername,
-                password_hash: passHash,
-                pin_hash:      pinHash,
-                name:          'Admin MicroClean',
-                role:          'admin'
-            });
-            console.log('✅ [Auth] Akun default admin_microcleaner berhasil di-seed ke database.');
-        } else {
-            // Pastikan hash password & PIN selalu sinkron dengan yang diminta user
-            await query(
-                'UPDATE users SET password_hash = ?, pin_hash = ? WHERE username = ?',
-                [passHash, pinHash, defaultUsername]
-            );
-        }
     } catch (err) {
         console.error('[Auth Init Error]', err);
+    }
+}
+
+export const ensureAuthSchema = ensureAuthSchemaAndSeed;
+
+/**
+ * Cek jumlah akun terdaftar di sistem
+ * @returns {Promise<number>}
+ */
+export async function getUserCount() {
+    await ensureAuthSchemaAndSeed();
+    try {
+        const rows = await query('SELECT COUNT(*) as count FROM users');
+        return Number(rows[0]?.count || 0);
+    } catch (err) {
+        console.error('[getUserCount Error]', err);
+        return 0;
     }
 }
 
@@ -118,12 +108,11 @@ export async function validateSession(token) {
 }
 
 /**
- * Buat session baru di database (berlaku 7 hari)
+ * Buat session baru di database (berlaku 1 jam / 60 menit)
  */
-export async function createSession(userId) {
+export async function createSession(userId, durationMinutes = 60) {
     const token = generateToken();
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
+    const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000); // 1 jam
 
     const expiresAtStr = expiresAt.toISOString().slice(0, 19).replace('T', ' ');
 

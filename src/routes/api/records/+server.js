@@ -6,7 +6,7 @@ import { json } from '@sveltejs/kit';
 import { query, insert } from '$lib/server/db.js';
 import { transformTank, formatLocalDate, getTodayLocal, calculateNextMaintenanceDate } from '$lib/server/statusHelper.js';
 
-// Auto-migrate format lama ke nama unit standar
+// Auto-migrate format lama ke nama unit standar & tambah kolom hose_reel jika belum ada
 async function autoMigrateUnitNames() {
     try {
         await query(`
@@ -21,6 +21,12 @@ async function autoMigrateUnitNames() {
         `);
     } catch (e) {
         // Abaikan jika DB belum siap
+    }
+
+    try {
+        await query("ALTER TABLE tanks ADD COLUMN hose_reel VARCHAR(20) NOT NULL DEFAULT 'Tidak' AFTER equipment");
+    } catch (e) {
+        // Abaikan jika kolom sudah ada
     }
 }
 
@@ -86,6 +92,7 @@ export async function POST({ request }) {
             tank_capacity:    unitName,
             sisa_solar:       body.sisa_solar     || '-',
             equipment:        body.equipment      || 'MicroClean Filter MDF250 / FEC250',
+            hose_reel:        body.hose_reel === 'Ada' ? 'Ada' : 'Tidak',
             status_mc:        'AKTIF',
             install_date:     installDateStr,
             last_maintenance: lastDateStr,

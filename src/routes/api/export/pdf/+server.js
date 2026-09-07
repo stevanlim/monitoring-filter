@@ -101,7 +101,7 @@ export async function POST({ request }) {
             }
         }
         const numMaintCols = Math.max(1, maxSlots);
-        const totalCols = 10 + numMaintCols;
+        const totalCols = 11 + numMaintCols;
 
         // 4. Kelompokkan tangki berdasarkan Group -> Wilayah / Provinsi
         const groupedData = {};
@@ -173,7 +173,8 @@ export async function POST({ request }) {
                 { content: 'Tanggal', colSpan: 1 + numMaintCols, styles: { halign: 'center', valign: 'middle' } },
                 { content: 'Status MC', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } },
                 { content: 'Kontak PIC', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } },
-                { content: 'Note', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } }
+                { content: 'Note', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } },
+                { content: 'Hose\nReel', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } }
             ],
             [
                 { content: 'PEMASANGAN', styles: { halign: 'center', valign: 'middle' } },
@@ -264,7 +265,15 @@ export async function POST({ request }) {
                         })),
                         { content: tank.status_mc || 'AKTIF', styles: { halign: 'center', fontStyle: 'bold' } },
                         { content: picText },
-                        { content: tank.notes || '' }
+                        { content: tank.notes || '' },
+                        {
+                            content: tank.hose_reel === 'Ada' ? 'Ada' : 'Tidak',
+                            styles: {
+                                halign: 'center',
+                                fontStyle: 'bold',
+                                textColor: tank.hose_reel === 'Ada' ? [0, 112, 192] : [90, 90, 90]
+                            }
+                        }
                     ];
 
                     body.push(rowCells);
@@ -299,16 +308,17 @@ export async function POST({ request }) {
             },
             columnStyles: {
                 0: { halign: 'center', cellWidth: 8 },  // No
-                1: { cellWidth: 24 },                   // Estate
-                2: { cellWidth: 18 },                   // Lokasi
-                3: { cellWidth: 24 },                   // Unit
-                4: { cellWidth: 20 },                   // Tipe Filter
-                5: { halign: 'center', cellWidth: 11 }, // Qty
-                6: { halign: 'center', cellWidth: 17 }, // Pemasangan
+                1: { cellWidth: 23 },                   // Estate
+                2: { cellWidth: 17 },                   // Lokasi
+                3: { cellWidth: 22 },                   // Unit
+                4: { cellWidth: 18 },                   // Tipe Filter
+                5: { halign: 'center', cellWidth: 10 }, // Qty
+                6: { halign: 'center', cellWidth: 16 }, // Pemasangan
                 // Maint cols auto width
-                [7 + numMaintCols]: { halign: 'center', cellWidth: 15 }, // Status MC
-                [8 + numMaintCols]: { cellWidth: 32 },                  // Kontak PIC
-                [9 + numMaintCols]: { cellWidth: 26 }                   // Note
+                [7 + numMaintCols]: { halign: 'center', cellWidth: 14 }, // Status MC
+                [8 + numMaintCols]: { cellWidth: 28 },                  // Kontak PIC
+                [9 + numMaintCols]: { cellWidth: 24 },                  // Note
+                [10 + numMaintCols]: { halign: 'center', cellWidth: 14 } // Hose Reel
             },
             // Footer tiap halaman
             didDrawPage(data) {

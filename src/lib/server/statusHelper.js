@@ -150,6 +150,7 @@ export function transformTank(row) {
         tank_capacity:    unitName,
         sisa_solar:       row.sisa_solar || '-',
         equipment:        row.equipment,
+        hose_reel:        row.hose_reel || 'Tidak',
         status_mc:        row.status_mc,
         install_date:     formatLocalDate(row.install_date),
         last_maintenance: formatLocalDate(row.last_maintenance),

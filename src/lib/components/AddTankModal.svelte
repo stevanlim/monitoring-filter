@@ -19,6 +19,7 @@
     let unitName = $state('Tangki Timbun Solar');
     let selectedFilterId = $state('');
     let equipment = $state('MDF 250-1');
+    let hoseReel = $state('Tidak');
     let installDate = $state(getTodayString());
     let intervalDays = $state(90);
     let picManager = $state('');
@@ -81,6 +82,7 @@
                 unit_name: unitName.trim() || 'Tangki Timbun Solar',
                 tank_capacity: unitName.trim() || 'Tangki Timbun Solar',
                 equipment: (equipment || selectedStockItem?.filter_name || 'MicroClean Filter').trim(),
+                hose_reel: hoseReel,
                 install_date: installDate,
                 last_maintenance: installDate,
                 interval_months: parseInt(intervalDays) || 90,
@@ -98,6 +100,7 @@
             estate = '';
             locationType = 'Kebun';
             region = '';
+            hoseReel = 'Tidak';
             picManager = '';
             notes = '';
             photoFile = null;
@@ -281,29 +284,54 @@
                             <span class="text-[10px] text-slate-500 mt-1 block">Beri nomor/nama pembeda jika lokasi memiliki lebih dari 1 unit filter (misal: Tangki Timbun 1, Tangki Timbun 2).</span>
                         </div>
 
-                        <!-- Model Filter & Stock Selection -->
-                        <!-- Model Filter Selection -->
-                        <div>
-                            <label for="equipment-select" class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">
-                                Tipe Filter Terpasang *
-                            </label>
-                            
-                            <select
-                                id="equipment-select"
-                                value={selectedFilterId}
-                                onchange={handleFilterSelect}
-                                class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-sky-500 font-medium"
-                            >
-                                {#if $filterStockStore.length === 0}
-                                    <option value="">(Belum ada data tipe filter di sistem)</option>
-                                {:else}
-                                    {#each $filterStockStore as item}
-                                        <option value={String(item.id)}>
-                                            {item.filter_name}
-                                        </option>
-                                    {/each}
-                                {/if}
-                            </select>
+                        <!-- Model Filter & Hose Reel Selection -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label for="equipment-select" class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">
+                                    Tipe Filter Terpasang *
+                                </label>
+                                
+                                <select
+                                    id="equipment-select"
+                                    value={selectedFilterId}
+                                    onchange={handleFilterSelect}
+                                    class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-sky-500 font-medium"
+                                >
+                                    {#if $filterStockStore.length === 0}
+                                        <option value="">(Belum ada data tipe filter di sistem)</option>
+                                    {:else}
+                                        {#each $filterStockStore as item}
+                                            <option value={String(item.id)}>
+                                                {item.filter_name}
+                                            </option>
+                                        {/each}
+                                    {/if}
+                                </select>
+                            </div>
+
+                            <div>
+                                <span class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">
+                                    Ketersediaan Hose Reel *
+                                </span>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button
+                                        type="button"
+                                        onclick={() => hoseReel = 'Ada'}
+                                        class="flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer {hoseReel === 'Ada' ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-md shadow-cyan-500/10' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'}"
+                                    >
+                                        <span class="text-xs">🌀</span>
+                                        <span>Ada</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onclick={() => hoseReel = 'Tidak'}
+                                        class="flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer {hoseReel === 'Tidak' ? 'bg-slate-800 border-slate-600 text-slate-300 shadow-md' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'}"
+                                    >
+                                        <span class="text-xs text-slate-400">✕</span>
+                                        <span>Tidak Ada</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Tanggal Pasang & Interval Servis -->
