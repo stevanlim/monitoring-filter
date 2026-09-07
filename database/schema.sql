@@ -145,19 +145,17 @@ CREATE TABLE IF NOT EXISTS `sessions` (
 
 -- ============================================================
 -- Tabel 7: filter_stock
--- Master Data & Stok Tipe Filter (MDF 250-1, FEC 250, dll)
+-- Master Data Tipe Filter (MDF 250-1, FEC 250, dll)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS `filter_stock` (
     `id`           INT NOT NULL AUTO_INCREMENT,
     `filter_name`  VARCHAR(100) NOT NULL UNIQUE,
-    `quantity`     INT NOT NULL DEFAULT 0,
-    `min_quantity` INT NOT NULL DEFAULT 3,
     `notes`        TEXT NULL,
     `created_at`   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     INDEX `idx_filter_name` (`filter_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='Master tipe filter dan kuota stok gudang';
+  COMMENT='Master tipe filter MicroClean';
 
 

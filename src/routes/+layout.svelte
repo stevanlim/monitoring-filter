@@ -54,7 +54,7 @@
 
     // Dynamic margin based on sidebar state (0px on mobile)
     let contentMargin = $derived(isMobile ? '0px' : (sidebarOpen ? '240px' : '64px'));
-    let isLoginPage = $derived(data?.pathname === '/login');
+    let isAuthPage = $derived(data?.pathname === '/login' || data?.pathname === '/register');
 </script>
 
 <svelte:head>
@@ -65,7 +65,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
 </svelte:head>
 
-{#if isLoginPage}
+{#if isAuthPage}
     {@render children()}
 {:else}
     <div class="min-h-screen transition-colors duration-200" style="background: var(--bg-page, #080C14); color: var(--text-main, #f1f5f9); font-family: 'Inter', sans-serif;">

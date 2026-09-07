@@ -11,7 +11,7 @@ export async function load({ fetch, url, locals }) {
     const pathname = url.pathname;
     const user = locals.user || null;
 
-    if (pathname === '/login') {
+    if (pathname === '/login' || pathname === '/register') {
         return { pathname, user, records: [], stats: { total: 0, aman: 0, notice: 0, jatuh_tempo: 0, non_aktif: 0, groups: {} }, photos: [], groups: [] };
     }
 

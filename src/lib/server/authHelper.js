@@ -114,13 +114,10 @@ export async function createSession(userId, durationMinutes = 60) {
     const token = generateToken();
     const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000); // 1 jam
 
-    const expiresAtStr = expiresAt.toISOString().slice(0, 19).replace('T', ' ');
-
-    await insert('sessions', {
-        id:         token,
-        user_id:    userId,
-        expires_at: expiresAtStr
-    });
+    await query(
+        'INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL ? MINUTE))',
+        [token, userId, durationMinutes]
+    );
 
     return { token, expiresAt };
 }

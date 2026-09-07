@@ -494,25 +494,6 @@ function createFilterStockStore() {
             }
         },
 
-        /** Tambah atau kurangi stok: delta = +N atau -N */
-        async adjustQuantity(id, delta) {
-            try {
-                const res = await fetch(`/api/stock/${id}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ delta })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    update(items => items.map(i => i.id === id ? data : i));
-                    return { success: true, item: data };
-                }
-                return { success: false, error: data.error };
-            } catch (err) {
-                return { success: false, error: err.message };
-            }
-        },
-
         async deleteItem(id) {
             try {
                 const res = await fetch(`/api/stock/${id}`, { method: 'DELETE' });

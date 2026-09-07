@@ -39,14 +39,19 @@ export async function POST({ request, cookies }) {
         const user = rows[0];
         const { token, expiresAt } = await createSession(user.id);
 
-        // Pasang HttpOnly cookie (masa aktif 1 jam)
+        console.log('[login-step2 Success] User authenticated:', {
+            userId: user.id,
+            username: user.username,
+            name: user.name
+        });
+
+        // Pasang HttpOnly cookie (masa aktif 1 jam / 3600 detik)
         cookies.set('auth_session', token, {
             path: '/',
             httpOnly: true,
             sameSite: 'lax',
-            secure: false, // True jika https
-            expires: expiresAt,
-            maxAge: 60 * 60 // 1 jam (3600 detik)
+            secure: false,
+            maxAge: 60 * 60
         });
 
         return json({
